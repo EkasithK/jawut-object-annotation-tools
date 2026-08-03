@@ -2,8 +2,12 @@
 
 ## Now
 
-All seven phases complete. The application builds, packages, and does the full round trip:
-create project → import images and existing labels → label → manage classes → export YOLO.
+All seven phases complete, **v0.1.0 released**, and the Windows build verified by CI's smoke
+test — the packaged exe launches, serves its frontend, creates a project and enforces its launch
+token on a real Windows machine.
+
+Release: https://github.com/EkasithK/jawut-object-annotation-tools/releases/tag/v0.1.0
+(26 MB zip + the user guide PDF)
 
 The one thing not yet done is the **real run on the actual 1,340 helmet images**, which cannot
 happen on this machine — the dataset lives on the Windows box (`C:/Users/kuaut/Desktop/helmet_wit/`
@@ -28,7 +32,10 @@ a faithful replica, and `docs/HELMET_MIGRATION.md` is the runbook for doing it f
   pywebview window owning the process, PyInstaller `onedir` spec, Windows release workflow.
 - **Phase 7 — Migration.** `tests/integration/test_helmet_migration.py` runs the whole 2→4 class
   job against a replica containing every awkward case; `docs/HELMET_MIGRATION.md` is the runbook.
-- 276 tests passing, 94% backend coverage, `ruff` and `mypy --strict` clean, frontend builds.
+- **Docs.** `docs/USER_GUIDE.md` with 15 screenshots from a real session, and `docs/build_pdf.py`
+  to render it; the PDF is attached to the release for handing to someone who will never open the
+  repository.
+- 281 tests passing, 94% backend coverage, `ruff` and `mypy --strict` clean, frontend builds.
 
 ## Next
 
@@ -36,8 +43,8 @@ Nothing is blocking. In rough order of value:
 
 1. **Run the real migration** on the Windows machine, following `docs/HELMET_MIGRATION.md`.
    That is the only remaining unknown.
-2. Tag `v0.1.0` to produce the first Windows zip, and try it on a machine that has never had
-   Python installed.
+2. Try the released zip on a Windows machine that has never had Python installed. CI proves it
+   runs; a human still has to confirm it *feels* right.
 3. Undo/redo in the UI. The `edit_log` table already records before/after for every save, so the
    data is there; only the UI and an endpoint are missing.
 4. An icon (`packaging/icon.ico`) — the spec picks it up automatically if present.
@@ -75,6 +82,14 @@ Nothing is blocking. In rough order of value:
 - Test images must differ by more than a little: JPEG quantization collapses near-identical solid
   colours into byte-identical files, which the importer correctly treats as duplicates. The
   `make_image` fixture spaces the channels widely for this reason.
+- **A windowed Windows build has no console: `sys.stdout` and `sys.stderr` are `None`.** The first
+  `print`, and uvicorn's logging setup, then raise and kill the process. `ensure_streams()` in
+  `__main__.py` handles it. Nothing outside Windows reproduces this, and it took a failed release
+  build to surface — do not remove that call.
+- Screenshots for the guide are produced by `shoot.py` (kept in the session scratchpad, not the
+  repo): it drives the app with Playwright, seeds boxes through the API rather than simulating
+  drags, and runs with `HOME` and `JAWUT_APP_DATA_DIR` pointed at a throwaway directory so no
+  local paths appear in the images.
 - PyInstaller can be run locally on Linux to validate the spec end to end. It produces a Linux
   binary, but it proves the bundle, the hidden imports and the data files are right — which is how
   the `schema.sql` bug was found before release.
