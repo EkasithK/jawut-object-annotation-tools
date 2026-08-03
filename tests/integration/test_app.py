@@ -74,14 +74,41 @@ def test_launch_token_accepts_the_right_value(monkeypatch: pytest.MonkeyPatch) -
     require_launch_token(x_jawut_token="secret")
 
 
-def test_the_index_page_is_served(client: TestClient) -> None:
+@pytest.fixture
+def built_frontend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Stand in for a built frontend.
+
+    These tests exercise how the shell is served, not the real bundle, and must
+    pass on a clean checkout where `npm run build` has never run.
+    """
+    static = tmp_path / "static"
+    static.mkdir()
+    (static / "index.html").write_text(
+        "<!doctype html><html><head><title>Jawut</title></head>"
+        "<body><div id='root'></div></body></html>",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr("jawut.app.STATIC_DIR", static)
+    return static
+
+
+def test_the_index_page_is_served(client: TestClient, built_frontend: Path) -> None:
     response = client.get("/")
     assert response.status_code == 200
     assert "Jawut" in response.text
 
 
+def test_an_unbuilt_frontend_says_so(
+    client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("jawut.app.STATIC_DIR", tmp_path / "never-built")
+    response = client.get("/")
+    assert response.status_code == 404
+    assert "npm" in response.json()["error"]["message"]
+
+
 def test_the_launch_token_is_injected_into_the_page(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
+    client: TestClient, built_frontend: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The page carries the token so the app's first request cannot race ahead of
     it being set."""
@@ -92,7 +119,7 @@ def test_the_launch_token_is_injected_into_the_page(
 
 
 def test_no_token_is_injected_in_development(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
+    client: TestClient, built_frontend: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.delenv(LAUNCH_TOKEN_ENV, raising=False)
     assert "__JAWUT_TOKEN__" not in client.get("/").text
