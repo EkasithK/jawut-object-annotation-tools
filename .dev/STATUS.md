@@ -1,18 +1,39 @@
-# Status — 2026-08-03
+# Status — 2026-08-03 (end of session 1)
 
 ## Now
 
-All seven phases complete, **v0.1.0 released**, and the Windows build verified by CI's smoke
-test — the packaged exe launches, serves its frontend, creates a project and enforces its launch
-token on a real Windows machine.
+**Nothing is in progress. The tree is clean, everything is pushed, CI is green.**
+
+All seven phases complete and **v0.1.0 released**, verified by a CI smoke test that launches the
+packaged exe on a Windows runner: it starts, serves its frontend, creates a project, creates a
+class, and refuses an unauthenticated call.
 
 Release: https://github.com/EkasithK/jawut-object-annotation-tools/releases/tag/v0.1.0
-(26 MB zip + the user guide PDF)
+(26 MB Windows zip + the user guide PDF)
 
-The one thing not yet done is the **real run on the actual 1,340 helmet images**, which cannot
-happen on this machine — the dataset lives on the Windows box (`C:/Users/kuaut/Desktop/helmet_wit/`
-per `../helmet_ngob_reject/Data/data.yaml`). The migration is encoded as an automated test against
-a faithful replica, and `docs/HELMET_MIGRATION.md` is the runbook for doing it for real.
+### Pick up here next session
+
+Two things are waiting on a human, both on the Windows machine:
+
+1. **Run the released exe by hand.** CI proves it starts; nobody has confirmed it *feels* right
+   to label with. Download the zip, extract, double-click, expect the SmartScreen warning
+   (More info → Run anyway).
+2. **Do the real 1,340-image relabel**, 2 classes → 4, following `docs/HELMET_MIGRATION.md`.
+   The dataset is not in any repo — it lives at `C:/Users/kuaut/Desktop/helmet_wit/` per
+   `../helmet_ngob_reject/Data/data.yaml`. The migration itself is already covered end to end by
+   `tests/integration/test_helmet_migration.py` against a replica containing every awkward case.
+
+Then, in the order I would pick them up, see **Next** below.
+
+### To run it locally right now
+
+```bash
+uv run python -m jawut --no-window --port 8000   # then open http://127.0.0.1:8000
+```
+
+The server injects the launch token into the page, so a browser works with nothing to paste.
+WSL2 forwards localhost, so a Windows browser reaches it. Six real site photos to try it on are
+at `../helmet_ngob_reject/Data/paper_material/figure/`.
 
 ## Done
 
@@ -41,19 +62,54 @@ a faithful replica, and `docs/HELMET_MIGRATION.md` is the runbook for doing it f
 
 Nothing is blocking. In rough order of value:
 
-1. **Run the real migration** on the Windows machine, following `docs/HELMET_MIGRATION.md`.
-   That is the only remaining unknown.
-2. Try the released zip on a Windows machine that has never had Python installed. CI proves it
-   runs; a human still has to confirm it *feels* right.
-3. Undo/redo in the UI. The `edit_log` table already records before/after for every save, so the
-   data is there; only the UI and an endpoint are missing.
-4. An icon (`packaging/icon.ico`) — the spec picks it up automatically if present.
-5. Native folder pickers via pywebview, replacing the typed paths in the import and export dialogs.
-   Typed paths work but are the weakest part of the experience for a non-technical user.
+1. **Native folder pickers** via `webview.create_file_dialog(FOLDER_DIALOG)`, replacing the typed
+   paths in the Add images, Import labels and Export dialogs. This is the weakest part of the
+   experience for a non-technical annotator and the highest-value change left. Needs a small
+   endpoint that only works when running windowed, with the typed field as the fallback.
+2. **Undo/redo in the UI.** `edit_log` already stores before/after JSON for every save, so the
+   data exists; what is missing is an endpoint to walk it and `Ctrl+Z` / `Ctrl+Shift+Z` wired up
+   in `Workspace.tsx`.
+3. **An icon** at `packaging/icon.ico` — `jawut.spec` picks it up automatically if present, and
+   currently ships the default PyInstaller icon.
+4. **Class reordering in the UI.** The API (`POST /api/v1/classes/reorder`) and the service are
+   done and tested; the palette has no drag handle. Matters because class order decides the
+   exported indices.
+5. **Bulk reassign in the UI.** `POST /api/v1/annotations/reassign` exists and is tested, but is
+   only reachable today through the delete-class dialog.
+6. Consider a code-signing certificate if this gets handed to more than a few people — it is the
+   only thing standing between them and a SmartScreen warning.
 
 ## Open questions / blocked
 
 - None.
+
+## The API, at a glance
+
+Every response is wrapped in `{data, error, meta}`. Everything under `/api/v1` requires the
+`X-Jawut-Token` header when `JAWUT_LAUNCH_TOKEN` is set, and returns `409 NO_PROJECT_OPEN` if no
+project is open.
+
+| Method | Path | Does |
+|---|---|---|
+| `GET` | `/api/v1/projects` | Whole welcome state: open project, recents, default location |
+| `POST` | `/api/v1/projects` | Create and open |
+| `POST` | `/api/v1/projects/open` \| `/close` \| `/forget` | Open, close, drop from recents |
+| `GET` | `/api/v1/classes` | List live classes in order |
+| `POST` | `/api/v1/classes` | Create |
+| `PATCH` | `/api/v1/classes/{id}` | Rename and/or recolour |
+| `POST` | `/api/v1/classes/reorder` | Full ordered id list; decides export indices |
+| `GET` | `/api/v1/classes/{id}/usage` | Box and image counts, for the delete dialog |
+| `POST` | `/api/v1/classes/{id}/delete` | Body carries `reassign_to` or null |
+| `POST` | `/api/v1/images/import` | Folder import, copy or link |
+| `GET` | `/api/v1/images?status=` | List + status counts |
+| `GET` | `/api/v1/images/{id}?status=` | Image, its boxes, and filtered neighbours |
+| `GET` | `/api/v1/images/{id}/file` | The image bytes |
+| `PATCH` | `/api/v1/images/{id}/status` | Set status |
+| `GET`/`PUT` | `/api/v1/annotations/{image_id}` | Read / replace the whole box set |
+| `POST` | `/api/v1/annotations/reassign` | Move every box of one class to another |
+| `POST` | `/api/v1/labels/preview` | Read a label folder, write nothing |
+| `POST` | `/api/v1/labels/import` | Apply with an explicit class mapping |
+| `POST` | `/api/v1/export` | Write a YOLO dataset |
 
 ## Notes for the next session
 
