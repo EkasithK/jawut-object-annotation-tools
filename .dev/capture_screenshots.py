@@ -1,5 +1,6 @@
 """Drive the running app in a real browser and capture the guide screenshots."""
 
+import json
 import shutil
 import sys
 import time
@@ -7,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import requests
-from playwright.sync_api import Page, sync_playwright
+from playwright.sync_api import Page, Route, sync_playwright
 
 SCRATCH = Path(sys.argv[1])
 SHOTS = Path(sys.argv[2])
@@ -34,13 +35,89 @@ def api(method: str, path: str, **kwargs: Any) -> Any:
     return response.json()["data"]
 
 
+def envelope(data: Any) -> str:
+    return json.dumps(
+        {
+            "data": data,
+            "error": None,
+            "meta": {"request_id": "screenshot", "timestamp": "2026-01-01T00:00:00Z"},
+        }
+    )
+
+
+#: What the folder chooser "returns" for each field it is opened from, so the
+#: captured flow matches what someone using the packaged app actually does.
+BROWSE_ANSWERS: dict[str, str] = {}
+
+
+def fake_capabilities(route: Route) -> None:
+    """Report native dialogs as present.
+
+    The Browse buttons only exist in the desktop window, and these screenshots
+    are taken in a browser. Without this the guide would show a UI that nobody
+    running the released exe ever sees.
+    """
+    route.fulfill(
+        status=200,
+        content_type="application/json",
+        body=envelope({"native_dialogs": True}),
+    )
+
+
+def fake_browse(route: Route) -> None:
+    kind = (route.request.post_data_json or {}).get("kind", "folder")
+    route.fulfill(
+        status=200,
+        content_type="application/json",
+        body=envelope({"path": BROWSE_ANSWERS.get(kind)}),
+    )
+
+
 with sync_playwright() as pw:
     browser = pw.chromium.launch()
     page = browser.new_page(viewport=VIEWPORT, device_scale_factor=2)
+    page.route("**/api/v1/system/capabilities", fake_capabilities)
+    page.route("**/api/v1/system/browse", fake_browse)
 
     # ── 1. Welcome screen, first run ─────────────────────────────────────────
     page.goto(BASE, wait_until="networkidle")
     shot(page, "01-welcome")
+
+    # ── 1b. Opening a dataset that already exists ────────────────────────────
+    # Built here rather than reusing the demo images: the point of the shot is a
+    # folder that arrived from somewhere else, already labeled.
+    existing = DEMO_HOME / "helmet_wit"
+    shutil.rmtree(existing, ignore_errors=True)
+    (existing / "images").mkdir(parents=True)
+    (existing / "labels").mkdir(parents=True)
+    for index in range(1, 25):
+        shutil.copy(
+            DEMO_HOME / "images" / f"site_{(index % 6) + 1:03d}.jpg",
+            existing / "images" / f"frame_{index:04d}.jpg",
+        )
+        if index <= 14:
+            (existing / "labels" / f"frame_{index:04d}.txt").write_text(
+                "0 0.5 0.42 0.09 0.11\n", encoding="utf-8"
+            )
+    (existing / "data.yaml").write_text(
+        "nc: 4\nnames: ['Helmet', 'Helmet_Ngob', 'Ngob', 'No_Helmet']\n",
+        encoding="utf-8",
+    )
+    BROWSE_ANSWERS["folder"] = str(existing)
+
+    page.click("text=Open existing dataset…")
+    page.wait_for_selector("#dataset-source")
+    page.click("dialog[open] >> text=Browse…")
+    page.wait_for_timeout(500)
+    shot(page, "01a-open-dataset")
+
+    page.click("dialog[open] >> text=Read folder")
+    page.wait_for_selector("text=Create project from this", timeout=20000)
+    shot(page, "01b-dataset-found")
+
+    page.click("dialog[open] >> [aria-label=Close]")
+    page.wait_for_timeout(500)
+    BROWSE_ANSWERS.clear()
 
     # ── 2. New project form filled in ────────────────────────────────────────
     page.fill("#project-name", "Helmet Relabel")

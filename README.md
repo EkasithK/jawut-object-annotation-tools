@@ -9,6 +9,10 @@ labels and some do not.
 
 ## Features
 
+- **Open an existing dataset in one step** — browse to a folder and it detects the layout
+  (`images`/`labels`, Ultralytics `train`/`valid`/`test`, or one flat folder), reads the class names
+  from `data.yaml`, and builds the project with images, classes and labels already in place
+- **Native folder pickers** everywhere a path is needed — no typing Windows paths
 - **Bounding-box labeling** with zoom, pan, edge-handle resize, and a keyboard-first workflow
 - **Import what you already have** — images alone, or images plus YOLO `.txt` labels and a
   `data.yaml`, with a mapping step so your class names land where you intend
@@ -37,10 +41,16 @@ installer.
 
 ## Getting started
 
-1. Launch the app and choose **New Project**, then pick a name and a folder to keep it in.
-2. **Add images** — point at a folder. Images are copied into the project by default, so the
+**If you already have a dataset**, choose **Open existing dataset**, browse to the folder, and
+confirm what it found. Images, classes and existing labels arrive together; images with no `.txt`
+stay marked untouched rather than empty.
+
+**If you are starting from photographs:**
+
+1. Launch the app and choose **New project**, then pick a name and a folder to keep it in.
+2. **Add images** — browse to a folder. Images are copied into the project by default, so the
    project folder stays self-contained and can be moved or backed up by copying it.
-3. **Add labels** (optional) — point at a folder of YOLO `.txt` files and, if you have one, a
+3. **Add labels** (optional) — browse to a folder of YOLO `.txt` files and, if you have one, a
    `data.yaml`. Map each incoming class to a project class, then review the import report.
 4. Label. Press `W` to draw a box, a number key to set its class, `D` for the next image.
 5. **Export** when done, choosing a split or a flat layout.
@@ -51,8 +61,8 @@ installer.
 |---|---|---|---|
 | `W` | new box | `A` / `D` | previous / next image |
 | `1`–`9` | set class of the selected box | `Space` | mark done and advance |
-| `Ctrl+Z` / `Ctrl+Shift+Z` | undo / redo | `Delete` | delete selected box |
-| `F` | fit image to window | `Esc` | cancel drawing / deselect |
+| `F` | fit image to window | `Delete` | delete selected box |
+| `Esc` | cancel drawing / deselect | | |
 
 ## Where your data lives
 

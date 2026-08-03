@@ -32,11 +32,60 @@ A **project** is one labeling job: a set of images, the classes you are using, a
 every box you draw. You can have as many as you like, and they never interfere with
 each other.
 
+There are three ways in, and which one you want depends on what you already have:
+
+| You have | Use |
+|---|---|
+| Photographs and nothing else | **New project** |
+| A folder of images that is already partly or fully labeled | **Open existing dataset** |
+| A project you made before | **Recent**, or **Open project** |
+
+**You never have to type a path.** Every box that asks for a folder has a
+**Browse…** button beside it that opens the ordinary Windows folder chooser. The
+box stays typeable if you would rather paste a path in.
+
 ---
 
-## Step 2 — Make a project
+## Step 1a — If you already have a dataset
 
-Type a name, check where it will be saved, and click **Create project**.
+This is the fastest route for anyone handed a folder from a previous tool, a
+colleague, or an earlier attempt. Click **Open existing dataset…** and browse to the
+folder.
+
+![Browsing to an existing dataset folder](guide/01a-open-dataset.png)
+
+Pick the folder that *contains* your images — not the `images` folder inside it, if
+there is one. The application works out the rest.
+
+![What was found in the folder](guide/01b-dataset-found.png)
+
+Before anything is created, it tells you what it found: how many images, how many
+already have labels, how the folder is arranged, and the class names. It recognises
+
+- `images` and `labels` folders side by side,
+- Ultralytics `train` / `valid` / `test` splits,
+- images and their `.txt` files together in one folder.
+
+**Class names come from your `data.yaml`.** This is what stops you looking at
+`0, 1, 2, 3` and having to remember which was which — the names are read from the
+config and created in the same order, so the number in every `.txt` file still means
+exactly what it meant before. If there is no `data.yaml`, the classes arrive as
+`class_0`, `class_1`, … and you can rename them afterwards without touching a single
+label.
+
+Then click **Create project from this**. Images, classes and existing labels all come
+in at once, and images that had no label file stay marked as **not yet looked at** —
+which is not the same as "checked and empty", and matters at export time.
+
+**Nothing in your original folder is modified.** With *Copy the images into the
+project* left on, the images are copied, and the source is only ever read.
+
+---
+
+## Step 2 — Make a project from scratch
+
+If you are starting with photographs and no labels: type a name, click **Browse…**
+to choose where it goes, and click **Create project**.
 
 ![The new project form filled in](guide/02-new-project.png)
 
@@ -68,7 +117,7 @@ The layout stays the same throughout:
 
 ## Step 4 — Add your images
 
-Click **Add images**, then give it the folder your photographs are in.
+Click **Add images**, then **Browse…** to the folder your photographs are in.
 
 ![The add images dialog](guide/04-add-images.png)
 
@@ -194,13 +243,22 @@ that is left.
 If you already have YOLO `.txt` labels — from a previous tool, or a colleague, or
 an earlier attempt — you do not have to start over.
 
-Click **Import labels** and point at the folder holding the `.txt` files.
+This is for adding labels to a project that already exists. If you have not made the
+project yet, **Open existing dataset** on the welcome screen does this and the import
+in one step.
+
+Click **Import labels** and browse to the folder holding the `.txt` files.
 
 ![The import labels dialog](guide/10-import-labels.jpg)
 
 Labels are matched to images **by filename**: `site_004.txt` belongs to
-`site_004.jpg`. If a `data.yaml` sits beside the folder or one level above it, the
-class names are read from it automatically.
+`site_004.jpg`.
+
+**Class names** are read from a `data.yaml` sitting beside the labels folder or one
+level above it. If yours is somewhere else — which is common, since the config often
+lives at the top of a dataset while the labels are two folders down — use the second
+**Browse…** to point straight at it. Without one, the incoming classes are named
+`class_0`, `class_1`, … and you have to remember which was which.
 
 Click **Read folder**. Nothing has been changed yet — this only reads and reports.
 
@@ -267,7 +325,9 @@ strange state.
 
 ## Step 10 — Export
 
-Click **Export**, and choose an empty folder to write to.
+Click **Export**, and choose an empty folder to write to. **Browse…** to the folder
+you want it to sit in, then add a new name on the end of the path — the destination
+has to be empty or not exist yet.
 
 ![The export dialog](guide/14-export.jpg)
 
@@ -340,8 +400,17 @@ mapping mistake rather than a labeling one.
 
 ## The short version
 
-1. **New Project**, give it a name
-2. **Add images**, point at your folder
+**Starting from a folder that is already labeled:**
+
+1. **Open existing dataset…**, **Browse…** to the folder
+2. Check what it found, **Create project from this**
+3. `W`, drag, number key. `Space` for the next one
+4. **Export**, choose an empty folder, **Split**
+
+**Starting from photographs and nothing else:**
+
+1. **New project**, give it a name
+2. **Add images**, **Browse…** to your folder
 3. Type your class names on the right
 4. `W`, drag, number key. `Space` for the next one
 5. **Export**, choose an empty folder, **Split**

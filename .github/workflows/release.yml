@@ -120,7 +120,12 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: "*.zip"
+          # The guide PDF is committed, so the copy attached here is always the
+          # one that matches this tag. It was uploaded by hand before, which is
+          # how a release could end up describing a different build.
+          files: |
+            *.zip
+            docs/USER_GUIDE.pdf
           draft: false
           body: |
             ## Install
@@ -132,3 +137,6 @@ jobs:
             Windows SmartScreen may show "Windows protected your PC" because the
             application is not code signed. Click **More info**, then
             **Run anyway**.
+
+            `USER_GUIDE.pdf` is the illustrated walkthrough — hand it to anyone
+            who will never open this repository.
