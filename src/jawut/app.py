@@ -7,18 +7,19 @@ so there is no auth layer beyond the per-launch token checked in
 
 from __future__ import annotations
 
+import json
 import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from jawut import APP_NAME, __version__
 from jawut.models import Envelope, ErrorDetail, HealthStatus, ReadyStatus
+from jawut.resources import package_file
 from jawut.routers.annotations import router as annotations_router
 from jawut.routers.classes import router as classes_router
 from jawut.routers.images import router as images_router
@@ -30,7 +31,8 @@ from jawut.session import NoProjectOpenError
 LAUNCH_TOKEN_ENV = "JAWUT_LAUNCH_TOKEN"  # noqa: S105  variable name, not a secret
 LAUNCH_TOKEN_HEADER = "X-Jawut-Token"  # noqa: S105  header name, not a secret
 
-STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+STATIC_DIR = package_file("static")
 
 
 def require_launch_token(
@@ -94,6 +96,30 @@ def create_app() -> FastAPI:
         from jawut.db.connection import probe
 
         return Envelope(data=ReadyStatus(db=probe()))
+
+    @app.get("/", include_in_schema=False)
+    async def index() -> HTMLResponse:
+        """Serve the app shell with the launch token already in it.
+
+        Injecting the token here rather than after the window opens removes a
+        race: the page can otherwise issue its first request before an
+        ``evaluate_js`` call has run, and that request would be rejected.
+        """
+        page = STATIC_DIR / "index.html"
+        if not page.is_file():
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    "the frontend is not built — run `npm --prefix frontend run build`"
+                ),
+            )
+
+        html = page.read_text(encoding="utf-8")
+        token = os.environ.get(LAUNCH_TOKEN_ENV)
+        if token:
+            script = f"<script>window.__JAWUT_TOKEN__={json.dumps(token)};</script>"
+            html = html.replace("</head>", f"{script}</head>", 1)
+        return HTMLResponse(html)
 
     guarded = [Depends(require_launch_token)]
     for api_router in (

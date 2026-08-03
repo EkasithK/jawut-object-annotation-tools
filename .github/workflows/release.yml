@@ -1,0 +1,131 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build (for a manual run)"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    # PyInstaller cannot cross-compile, so the Windows build has to happen on
+    # Windows. This is why no Windows development machine is needed.
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Build the frontend
+        run: |
+          npm ci
+          npm run build
+        working-directory: frontend
+
+      - name: Install Python dependencies
+        run: uv sync --frozen --extra desktop
+
+      - name: Build the application
+        run: uv run --with pyinstaller pyinstaller packaging/jawut.spec --noconfirm
+
+      - name: Smoke test the build
+        shell: pwsh
+        run: |
+          # The packaged exe is windowed, so drive the server directly and prove
+          # the bundle can serve its own frontend before anything is published.
+          $exe = "dist/Jawut Object Annotation Tools/Jawut Object Annotation Tools.exe"
+          if (-not (Test-Path $exe)) { throw "the executable was not produced" }
+          $proc = Start-Process -FilePath $exe -ArgumentList "--no-window","--port","8765" -PassThru
+          try {
+            $ready = $false
+            foreach ($attempt in 1..30) {
+              Start-Sleep -Seconds 2
+              try {
+                $health = Invoke-RestMethod "http://127.0.0.1:8765/health" -TimeoutSec 5
+                if ($health.data.status -eq "ok") { $ready = $true; break }
+              } catch { }
+            }
+            if (-not $ready) { throw "the packaged application never became healthy" }
+
+            $page = Invoke-WebRequest "http://127.0.0.1:8765/" -TimeoutSec 10
+            if ($page.StatusCode -ne 200) { throw "the bundled frontend was not served" }
+
+            # Creating a project exercises the bundled schema.sql and sqlite. A
+            # health check alone would pass on a build whose data files are
+            # missing, and that failure would only surface for the user.
+            if ($page.Content -notmatch '__JAWUT_TOKEN__="([^"]+)"') {
+              throw "the launch token was not injected into the page"
+            }
+            $token = $Matches[1]
+            $headers = @{ "X-Jawut-Token" = $token }
+            $workspace = Join-Path $env:RUNNER_TEMP "smoke"
+
+            $created = Invoke-RestMethod "http://127.0.0.1:8765/api/v1/projects" `
+              -Method Post -Headers $headers -ContentType "application/json" `
+              -Body (@{ name = "Smoke"; parent_dir = $workspace } | ConvertTo-Json)
+            if ($created.data.schema_version -lt 1) { throw "the project schema was not created" }
+
+            $class = Invoke-RestMethod "http://127.0.0.1:8765/api/v1/classes" `
+              -Method Post -Headers $headers -ContentType "application/json" `
+              -Body (@{ name = "Helmet" } | ConvertTo-Json)
+            if (-not $class.data.id) { throw "a class could not be created" }
+
+            # An unauthenticated call must be refused, or the token is decorative.
+            try {
+              Invoke-RestMethod "http://127.0.0.1:8765/api/v1/classes" -TimeoutSec 5 | Out-Null
+              throw "the API answered without a launch token"
+            } catch [System.Net.WebException], [Microsoft.PowerShell.Commands.HttpResponseException] {
+              if ($_.Exception.Response.StatusCode.value__ -ne 401) { throw }
+            }
+
+            Write-Host "packaged build serves its frontend, creates projects and enforces its token"
+          } finally {
+            Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+          }
+
+      - name: Package the zip
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}"
+          if (-not $version) { $version = "dev" }
+          Compress-Archive `
+            -Path "dist/Jawut Object Annotation Tools/*" `
+            -DestinationPath "Jawut-Object-Annotation-Tools-$version-windows.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: "*.zip"
+          retention-days: 14
+
+      - name: Publish the release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "*.zip"
+          draft: false
+          body: |
+            ## Install
+
+            Download the zip, extract it anywhere, and run
+            **Jawut Object Annotation Tools.exe**. Nothing else is required — no
+            Python, no database, no installer.
+
+            Windows SmartScreen may show "Windows protected your PC" because the
+            application is not code signed. Click **More info**, then
+            **Run anyway**.

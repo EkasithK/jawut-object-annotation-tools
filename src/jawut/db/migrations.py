@@ -14,11 +14,13 @@ from __future__ import annotations
 
 import sqlite3
 from collections.abc import Callable
-from pathlib import Path
+
+from jawut.resources import package_file
 
 SCHEMA_VERSION = 1
 
-SCHEMA_PATH = Path(__file__).resolve().parent / "schema.sql"
+#: Resolved through the package helper so it is found inside a frozen build too.
+SCHEMA_PATH = package_file("db", "schema.sql")
 
 Migration = Callable[[sqlite3.Connection], None]
 

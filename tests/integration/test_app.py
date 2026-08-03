@@ -72,3 +72,27 @@ def test_launch_token_rejects_a_missing_header(monkeypatch: pytest.MonkeyPatch) 
 def test_launch_token_accepts_the_right_value(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(LAUNCH_TOKEN_ENV, "secret")
     require_launch_token(x_jawut_token="secret")
+
+
+def test_the_index_page_is_served(client: TestClient) -> None:
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "Jawut" in response.text
+
+
+def test_the_launch_token_is_injected_into_the_page(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The page carries the token so the app's first request cannot race ahead of
+    it being set."""
+    monkeypatch.setenv(LAUNCH_TOKEN_ENV, "s3cret-token")
+    body = client.get("/").text
+    assert '__JAWUT_TOKEN__="s3cret-token"' in body
+    assert body.index("__JAWUT_TOKEN__") < body.index("</head>")
+
+
+def test_no_token_is_injected_in_development(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv(LAUNCH_TOKEN_ENV, raising=False)
+    assert "__JAWUT_TOKEN__" not in client.get("/").text
