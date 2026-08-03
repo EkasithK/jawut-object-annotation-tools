@@ -5,10 +5,10 @@ import sqlite3
 from pathlib import Path
 
 import pytest
-from tests.conftest import MakeImage
 
 from jawut.services import images
 from jawut.services.projects import Project
+from tests.conftest import MakeImage
 
 
 def test_scan_finds_images_and_ignores_other_files(

@@ -4,11 +4,11 @@ import sqlite3
 from pathlib import Path
 
 import pytest
-from tests.conftest import MakeImage
 
 from jawut.services import annotations as ann
 from jawut.services import classes, images
 from jawut.services.projects import Project
+from tests.conftest import MakeImage
 
 
 @pytest.fixture

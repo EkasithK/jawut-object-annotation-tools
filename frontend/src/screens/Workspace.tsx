@@ -21,6 +21,7 @@ import { closeProject } from "../api/projects";
 import { BoxCanvas } from "../canvas/BoxCanvas";
 import { DeleteClassDialog } from "../components/DeleteClassDialog";
 import { ImportImagesDialog } from "../components/ImportImagesDialog";
+import { ImportLabelsDialog } from "../components/ImportLabelsDialog";
 import { BoxList } from "../panels/BoxList";
 import { ClassPalette } from "../panels/ClassPalette";
 import { ImageList } from "../panels/ImageList";
@@ -51,6 +52,7 @@ export function Workspace() {
   const [fitToken, setFitToken] = useState(0);
 
   const [importOpen, setImportOpen] = useState(false);
+  const [labelsOpen, setLabelsOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ObjectClass | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -299,6 +301,13 @@ export function Workspace() {
           Add images
         </button>
         <button
+          onClick={() => setLabelsOpen(true)}
+          className="border border-line-strong px-2.5 py-1 text-[12px]
+            transition-colors hover:border-accent hover:text-accent"
+        >
+          Import labels
+        </button>
+        <button
           onClick={() => void closeProject().then(() => setProject(null))}
           className="text-[12px] text-ink-muted transition-colors hover:text-ink"
         >
@@ -421,6 +430,17 @@ export function Workspace() {
         onImported={async () => {
           const listed = await refreshImages();
           if (!detail && listed[0]) await openImage(listed[0].id);
+        }}
+      />
+
+      <ImportLabelsDialog
+        open={labelsOpen}
+        classes={classes}
+        onClose={() => setLabelsOpen(false)}
+        onImported={async () => {
+          await refreshClasses();
+          await refreshImages();
+          if (detail) await openImage(detail.image.id);
         }}
       />
 

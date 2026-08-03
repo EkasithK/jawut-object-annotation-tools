@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-from tests.conftest import MakeImage
 
 from jawut import session
 from jawut.services.projects import Project
+from tests.conftest import MakeImage
 
 
 @pytest.fixture

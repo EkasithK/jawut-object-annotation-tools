@@ -22,6 +22,7 @@ from jawut.models import Envelope, ErrorDetail, HealthStatus, ReadyStatus
 from jawut.routers.annotations import router as annotations_router
 from jawut.routers.classes import router as classes_router
 from jawut.routers.images import router as images_router
+from jawut.routers.io import router as io_router
 from jawut.routers.projects import router as projects_router
 from jawut.session import NoProjectOpenError
 
@@ -99,6 +100,7 @@ def create_app() -> FastAPI:
         classes_router,
         images_router,
         annotations_router,
+        io_router,
     ):
         app.include_router(api_router, dependencies=guarded)
 
