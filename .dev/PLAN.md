@@ -173,7 +173,7 @@ Keybindings are a v1 requirement, not polish — they are the entire reason CVAT
 - [x] Projects service + router: create, open, close, forget, list recent
 - [x] Welcome screen UI (New / Recent)
 
-### Phase 3 — Labeling ✅
+### Phase 3 — Labeling — one item outstanding
 - [x] Image import: copy into project or link, Pillow dimensions, sha256 dedupe
 - [x] `BoxCanvas`: fit / zoom / pan
 - [x] Draw and resize boxes with edge handles
@@ -181,7 +181,9 @@ Keybindings are a v1 requirement, not polish — they are the entire reason CVAT
 - [x] Box class reassignment
 - [x] Status filter bar
 - [x] Full keybindings
-- [x] Undo / redo backed by `edit_log`
+- [ ] Undo / redo backed by `edit_log` — **not built.** `edit_log` stores before/after JSON
+      for every save, so the data is there; the endpoint to walk it and the `Ctrl+Z` binding
+      are missing, and `Workspace.tsx` currently ignores every modifier key
 
 ### Phase 4 — Label import ✅
 - [x] `data.yaml` parsing and class inference
@@ -200,16 +202,41 @@ Keybindings are a v1 requirement, not polish — they are the entire reason CVAT
 - [x] `__main__.py`: uvicorn on port 0 + launch token + pywebview window
 - [x] Native folder pickers
 - [x] Clean shutdown on window close
-- [x] `packaging/jawut.spec` (onedir, windowed, icon)
+- [x] `packaging/jawut.spec` (onedir, windowed) — **no icon yet**; the spec picks up
+      `packaging/icon.ico` automatically if one is added
 - [x] `.github/workflows/release.yml` on `windows-latest`
-- [x] First end-to-end exe verified on a clean Windows machine
+- [x] First end-to-end exe verified on a clean Windows machine — by the CI smoke test, which
+      launches the packaged exe on a fresh `windows-latest` runner, serves the frontend,
+      creates a project and a class, and checks the token is enforced
+- [ ] Verified **by a human** double-clicking it. Still nobody has. This is the only way to
+      exercise the native folder dialogs, which no automated test reaches
 
-### Phase 7 — Real run ✅
-- [x] Import the real helmet images + 2-class labels
-- [x] Map to the 4-class taxonomy, add `Helmet_Ngob` and `Ngob`
-- [x] Reassign a batch, delete a class with reassignment
-- [x] Export split, verify `data.yaml` and spot-check `.txt` against the UI
-- [x] Confirm empty-vs-missing `.txt` survives an import → export round trip
+### Phase 7 — Real run — covered by test, not yet done for real
+
+Every step below is exercised end to end by `tests/integration/test_helmet_migration.py`
+against a replica containing each awkward case, and written up in `docs/HELMET_MIGRATION.md`.
+**The actual 1,340-image dataset has not been run through it yet** — that needs the Windows
+machine where the data lives.
+
+- [x] Import the real helmet images + 2-class labels *(replica)*
+- [x] Map to the 4-class taxonomy, add `Helmet_Ngob` and `Ngob` *(replica)*
+- [x] Reassign a batch, delete a class with reassignment *(replica)*
+- [x] Export split, verify `data.yaml` and spot-check `.txt` against the UI *(replica)*
+- [x] Confirm empty-vs-missing `.txt` survives an import → export round trip *(replica)*
+- [ ] The same, on the real `C:/Users/kuaut/Desktop/helmet_wit/` dataset
+
+### After the plan — v0.2.0 and v0.3.0
+
+Not part of the original seven phases; driven by using the thing.
+
+- [x] Native folder/file dialogs behind `/api/v1/system`, with the typed field as fallback
+- [x] Open-project route for a project that is not in the recent list
+- [x] `Open existing dataset` wizard — `/api/v1/datasets/scan` and `adopt`
+- [x] Explicit `data.yaml` picker in label import
+- [x] Warm light theme with a dark canvas well
+- [x] Dark halo under every box stroke and label; high-visibility default palette
+- [x] Interface text raised a tier throughout
+- [x] README, user guide and release body written for a public audience, SmartScreen included
 
 ## Verification
 
