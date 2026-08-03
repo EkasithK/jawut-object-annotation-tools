@@ -1,7 +1,8 @@
 """Render a Markdown document in this folder to a styled PDF.
 
     uv run --with markdown --with weasyprint python docs/build_pdf.py
-    uv run --with markdown --with weasyprint python docs/build_pdf.py HELMET_MIGRATION.md
+    uv run --with markdown --with weasyprint python docs/build_pdf.py \
+        HELMET_MIGRATION.md
 
 Images are resolved relative to this folder, so `guide/01-welcome.png` works.
 """

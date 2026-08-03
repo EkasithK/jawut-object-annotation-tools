@@ -4,28 +4,31 @@ import shutil
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 import requests
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import Page, sync_playwright
 
 SCRATCH = Path(sys.argv[1])
 SHOTS = Path(sys.argv[2])
 PORT = int(sys.argv[3])
 BASE = f"http://127.0.0.1:{PORT}"
 
-DEMO_HOME = Path("/tmp/jawut-demo")
+# A deliberate, predictable location: it appears in the screenshots, so it has to
+# be short and free of anything personal.
+DEMO_HOME = Path("/tmp/jawut-demo")  # noqa: S108
 (DEMO_HOME / "Documents" / "Jawut Projects").mkdir(parents=True, exist_ok=True)
 SHOTS.mkdir(parents=True, exist_ok=True)
 VIEWPORT = {"width": 1440, "height": 900}
 
 
-def shot(page, name: str, pause: float = 0.6) -> None:
+def shot(page: Page, name: str, pause: float = 0.6) -> None:
     time.sleep(pause)
     page.screenshot(path=str(SHOTS / f"{name}.png"))
     print(f"  captured {name}.png")
 
 
-def api(method: str, path: str, **kwargs):
+def api(method: str, path: str, **kwargs: Any) -> Any:
     response = requests.request(method, f"{BASE}{path}", timeout=30, **kwargs)
     response.raise_for_status()
     return response.json()["data"]
@@ -73,7 +76,11 @@ with sync_playwright() as pw:
         "No_Helmet": "#f2789f",
     }
     for cls in api("GET", "/api/v1/classes")["classes"]:
-        api("PATCH", f"/api/v1/classes/{cls['id']}", json={"color": palette[cls["name"]]})
+        api(
+            "PATCH",
+            f"/api/v1/classes/{cls['id']}",
+            json={"color": palette[cls["name"]]},
+        )
     page.reload(wait_until="networkidle")
     page.wait_for_timeout(900)
     shot(page, "06-classes")
@@ -87,18 +94,24 @@ with sync_playwright() as pw:
     # Coordinates taken from the ground-truth rectangles already burned into these
     # figures, so every box lands exactly on a head.
     layouts = {
-        "site_001.jpg": [("Helmet", 0.1977, 0.3457, 0.075, 0.0667),
-                         ("Helmet", 0.2958, 0.3019, 0.075, 0.0679),
-                         ("Helmet", 0.3648, 0.3537, 0.0481, 0.0556),
-                         ("Helmet", 0.5005, 0.3321, 0.1102, 0.0716),
-                         ("Helmet", 0.6986, 0.3759, 0.0787, 0.0753),
-                         ("Helmet", 0.8148, 0.3216, 0.0796, 0.0679)],
-        "site_002.jpg": [("No_Helmet", 0.4652, 0.5172, 0.0492, 0.0594),
-                         ("No_Helmet", 0.6934, 0.3484, 0.0367, 0.051),
-                         ("No_Helmet", 0.8598, 0.3609, 0.0477, 0.0594)],
+        "site_001.jpg": [
+            ("Helmet", 0.1977, 0.3457, 0.075, 0.0667),
+            ("Helmet", 0.2958, 0.3019, 0.075, 0.0679),
+            ("Helmet", 0.3648, 0.3537, 0.0481, 0.0556),
+            ("Helmet", 0.5005, 0.3321, 0.1102, 0.0716),
+            ("Helmet", 0.6986, 0.3759, 0.0787, 0.0753),
+            ("Helmet", 0.8148, 0.3216, 0.0796, 0.0679),
+        ],
+        "site_002.jpg": [
+            ("No_Helmet", 0.4652, 0.5172, 0.0492, 0.0594),
+            ("No_Helmet", 0.6934, 0.3484, 0.0367, 0.051),
+            ("No_Helmet", 0.8598, 0.3609, 0.0477, 0.0594),
+        ],
         "site_003.jpg": [("Ngob", 0.4337, 0.3647, 0.1778, 0.1164)],
-        "site_004.jpg": [("Helmet_Ngob", 0.4567, 0.5938, 0.1318, 0.1289),
-                         ("Helmet_Ngob", 0.6048, 0.5857, 0.1034, 0.1181)],
+        "site_004.jpg": [
+            ("Helmet_Ngob", 0.4567, 0.5938, 0.1318, 0.1289),
+            ("Helmet_Ngob", 0.6048, 0.5857, 0.1034, 0.1181),
+        ],
     }
 
     for image in images:
@@ -161,8 +174,7 @@ with sync_playwright() as pw:
 
     page.click("dialog[open] >> text=Read folder")
     page.wait_for_selector("text=Map classes", timeout=20000)
-    page.select_option("select[aria-label='Map class Safety-Helmet']",
-                       label="Helmet")
+    page.select_option("select[aria-label='Map class Safety-Helmet']", label="Helmet")
     page.wait_for_timeout(400)
     shot(page, "11-class-mapping")
 
