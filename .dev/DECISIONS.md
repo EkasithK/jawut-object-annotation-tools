@@ -247,3 +247,29 @@ lands on the release page never sees the README.
 least likely to follow a link), and buying a code-signing certificate for now — it is the real
 fix, but it is a recurring cost that only makes sense once the audience is larger than a few
 people.
+
+---
+
+## 2026-08-03 — The bundle unblocks itself, via PowerShell
+
+**Decision.** Every frozen launch runs `Unblock-File` over its own directory before importing
+pywebview, and if the window still fails a user32 message box explains why and offers the browser.
+
+**Why.** The first person to double-click a release got a stack trace and no application.
+Explorer's *Extract All* had copied the internet mark onto all 287 files, and .NET Framework will
+not load `Python.Runtime.dll` from an internet-zone file — so pywebview died before anything
+reached the screen, in a build with no console to report it. Nothing about that failure suggests
+"a file property is wrong" to the person seeing it.
+
+Doing it in-process was tried first and shipped broken as v0.3.1: deleting an alternate data
+stream by path fails on Windows with "the filename, directory name, or volume label syntax is
+incorrect", from `os.remove` and from `cmd`'s `del` equally, and the loop swallowed that as an
+ordinary `OSError`. `Unblock-File` is what Windows documents, and it was confirmed working on the
+same files. It runs unconditionally rather than only when a mark is found, because detecting one
+means reading the stream that cannot reliably be addressed in the first place.
+
+**Rejected.** Telling users to unblock the zip themselves and nothing more (the README says it,
+but the failure mode gives them no reason to connect the two); a code-signing certificate, which
+is the real fix for this and for SmartScreen but is a recurring cost that only makes sense with a
+larger audience; and retrying the window after unblocking, since a half-initialised pythonnet is
+not reliably recoverable in the same process.

@@ -4,24 +4,26 @@
 
 **Nothing is in progress. The tree is clean, everything is pushed.**
 
-Session 2 shipped **v0.2.0** then **v0.3.0**. v0.2.0 was native folder pickers everywhere, a
+Session 2 shipped **v0.2.0**, **v0.3.0** and **v0.3.2**. v0.2.0 was native folder pickers everywhere, a
 one-step "Open existing dataset" flow, and the warm light theme. v0.3.0 was readability: boxes
 that survive a real photograph, larger interface text, and README/release pages written for the
 public repo this will become.
 
 ### Pick up here next session
 
-Three things are waiting on a human, all on the Windows machine:
+**The packaged exe has now been run on Windows.** It opens, and v0.3.2 was verified end to end
+from a fully blocked extraction: 287 marked files in, window open and 0 marked files out. What
+that leaves:
 
-1. **Verify the native dialogs on Windows.** This is the one thing that could not be tested here.
+1. **Nobody has clicked a Browse button yet.** The window opens, so `desktop.set_window` runs and
+   `capabilities` will report `native_dialogs: true`, but no dialog has actually been opened.
    `desktop.pick_folder` calls `webview.create_file_dialog` from an `anyio` worker thread; the
-   WinForms/EdgeChromium backend marshals to the UI thread internally, so it should be fine, but
-   nothing on Linux exercises it. If a dialog hangs or the window locks up, the fix is to marshal
-   explicitly through the pywebview window rather than calling from a worker thread. The typed
-   path field stays as a fallback either way, so a failure here degrades rather than blocks.
-2. **Run the released exe by hand** and confirm the theme, the wizard and the new box styling
-   feel right to label with. This is also the only way to see the Browse buttons at all —
-   see the note below about why they are invisible in development.
+   WinForms backend marshals to the UI thread internally, so it should be fine. If a dialog hangs
+   or freezes the window, marshal explicitly through the pywebview window instead of calling from
+   a worker thread. The typed path field is still there either way, so a failure degrades rather
+   than blocks.
+2. **Label something real with it** and confirm the theme, the wizard and the new box styling feel
+   right over more than a few images.
 3. **Do the real 1,340-image relabel**, 2 classes to 4, following `docs/HELMET_MIGRATION.md`. The
    dataset lives at `C:/Users/kuaut/Desktop/helmet_wit/` per `../helmet_ngob_reject/Data/data.yaml`.
    With v0.2.0 the first half of that runbook collapses into **Open existing dataset** — browse to
@@ -214,6 +216,19 @@ project is open.
   more fragile), and runs with `HOME` and `JAWUT_APP_DATA_DIR` pointed at a throwaway directory so
   no local paths appear in the images. Needs a browser once:
   `uv run --with playwright python -m playwright install chromium`.
+- **A downloaded zip poisons the whole bundle.** Explorer's *Extract All* copies the
+  Zone.Identifier stream onto every extracted file, and .NET Framework then refuses to load
+  `Python.Runtime.dll`, so pywebview cannot open the window and a windowed build has no console
+  to say why. `unblock_bundle()` in `__main__.py` clears it on every frozen launch. **Do not
+  reimplement it in Python**: deleting an alternate data stream by path fails with "the filename,
+  directory name, or volume label syntax is incorrect", from `os.remove` and from `del` alike —
+  that was tried in v0.3.1, silently cleared nothing, and shipped broken. PowerShell's
+  `Unblock-File` is the mechanism that works, invoked by absolute path under `%SystemRoot%`.
+- Note that `Expand-Archive` in PowerShell does **not** propagate the mark, so it cannot reproduce
+  the bug. Stamp the extracted files with `Set-Content -Stream Zone.Identifier` instead.
+- The release smoke test runs `--no-window`, so it never touches pywebview or pythonnet. It now
+  asserts `Python.Runtime.dll` is in the bundle, but nothing automated opens a real window —
+  a GUI regression can only be caught by launching the exe.
 - PyInstaller can be run locally on Linux to validate the spec end to end. It produces a Linux
   binary, but it proves the bundle, the hidden imports and the data files are right — which is how
   the `schema.sql` bug was found before release.
