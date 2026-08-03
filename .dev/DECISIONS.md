@@ -209,3 +209,41 @@ cream-on-gold when the surfaces flipped.
 
 **Rejected.** A light/dark toggle (doubles the surface area to check on every screen for a
 single-user desktop tool), and a light canvas (washes out bright box colours).
+
+---
+
+## 2026-08-03 — Every box is drawn twice, and the palette avoids the outdoors
+
+**Decision.** A dark halo stroke goes under every coloured box stroke and label chip, and the
+default class palette is saturated colours that do not occur in dirt, vegetation or machinery.
+
+**Why.** A single coloured line is invisible wherever the scene behind it is a similar colour.
+On construction photographs that is most of the frame, and the old palette made it certain —
+sand, olive, umber and a muted green are exactly what a site is made of. The complaint arrived
+from the excavator labeling work before this project existed. The halo is the part that actually
+fixes it: it gives a box a dark edge against sky and a bright edge against mud, so visibility
+stops depending on the background and therefore on the palette. The palette change is the second
+line of defence, and only affects new classes — projects keep colours already saved.
+
+**Rejected.** Picking a "safer" palette alone (whatever is chosen, some scene defeats it), and
+scaling stroke width with zoom (constant screen-space weight is what every comparable tool does,
+and a stroke that thickens as you zoom in hides the boundary you zoomed in to see).
+
+---
+
+## 2026-08-03 — The SmartScreen warning is documented as a first-class topic
+
+**Decision.** The README, the user guide and the release body each carry a full explanation of
+the Windows SmartScreen warning: the exact clicks, the reason, what can be verified, and the
+Unblock fallback.
+
+**Why.** It is the first thing a new user meets, and it reads as "this file is dangerous" when it
+actually means "Windows does not recognise the publisher". Without the explanation a
+non-technical annotator either refuses to run the tool or runs it uneasily. Repeating it in three
+places is deliberate — people arrive at each of those surfaces independently, and the one who
+lands on the release page never sees the README.
+
+**Rejected.** A single link to one canonical explanation (the person who needs it most is the
+least likely to follow a link), and buying a code-signing certificate for now — it is the real
+fix, but it is a recurring cost that only makes sense once the audience is larger than a few
+people.

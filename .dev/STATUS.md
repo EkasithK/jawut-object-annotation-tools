@@ -4,8 +4,10 @@
 
 **Nothing is in progress. The tree is clean, everything is pushed.**
 
-Session 2 shipped **v0.2.0**: native folder pickers everywhere, a one-step "Open existing dataset"
-flow, and the warm light theme.
+Session 2 shipped **v0.2.0** then **v0.3.0**. v0.2.0 was native folder pickers everywhere, a
+one-step "Open existing dataset" flow, and the warm light theme. v0.3.0 was readability: boxes
+that survive a real photograph, larger interface text, and README/release pages written for the
+public repo this will become.
 
 ### Pick up here next session
 
@@ -17,7 +19,9 @@ Three things are waiting on a human, all on the Windows machine:
    nothing on Linux exercises it. If a dialog hangs or the window locks up, the fix is to marshal
    explicitly through the pywebview window rather than calling from a worker thread. The typed
    path field stays as a fallback either way, so a failure here degrades rather than blocks.
-2. **Run the released exe by hand** and confirm the new theme and the wizard feel right to label with.
+2. **Run the released exe by hand** and confirm the theme, the wizard and the new box styling
+   feel right to label with. This is also the only way to see the Browse buttons at all —
+   see the note below about why they are invisible in development.
 3. **Do the real 1,340-image relabel**, 2 classes to 4, following `docs/HELMET_MIGRATION.md`. The
    dataset lives at `C:/Users/kuaut/Desktop/helmet_wit/` per `../helmet_ngob_reject/Data/data.yaml`.
    With v0.2.0 the first half of that runbook collapses into **Open existing dataset** — browse to
@@ -80,6 +84,26 @@ are at `../helmet_ngob_reject/Data/paper_material/figure/`.
   rebuilt in the new palette. The release workflow now attaches `docs/USER_GUIDE.pdf` itself
   rather than relying on a manual upload. Removed a `Ctrl+Z` / `Ctrl+Shift+Z` row from the README
   keyboard table — it documented an undo feature that does not exist.
+### Session 2, second half — v0.3.0
+
+- **Boxes are drawn twice.** A dark halo underneath every coloured stroke, then the class colour
+  on top. A single coloured line disappears wherever the scene behind it is a similar colour,
+  which on site photographs is constant — this was the complaint carried over from the excavator
+  labeling work. Stroke 1.5px → 3px (5px selected), label chip 11px → 13px with the same halo,
+  handles outlined dark instead of in the class colour.
+- **New default palette.** The old one contained sand, olive, umber and a muted green — dirt,
+  vegetation and machinery. Replaced with saturated colours that do not occur outdoors, ordered
+  so the first four also dodge high-visibility clothing and equipment yellow. Existing projects
+  keep whatever colours are already saved against their classes; only new classes get these.
+- **Typography.** Every size tier up ~2px, base 14 → 15, small uppercase labels given weight,
+  muted greys darkened. The image-list filters lost their letter-spacing so five still fit.
+- **SmartScreen explained properly** in the README, the user guide and the release body: the
+  exact clicks, why it happens (no code-signing certificate — Windows does not recognise the
+  publisher, it has not found anything harmful), what a sceptical user can verify, and the
+  Unblock step. This was raised specifically because people read the warning as "virus".
+- **README rewritten for a cold audience**, with screenshots and a table of the four dataset
+  traps the tool exists to avoid. The release body template got the same treatment plus
+  `generate_release_notes`.
 - 326 tests passing, 94% backend coverage, `ruff` and `mypy --strict` clean, frontend builds,
   eslint clean.
 
