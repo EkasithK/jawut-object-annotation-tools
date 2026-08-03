@@ -127,16 +127,52 @@ jobs:
             *.zip
             docs/USER_GUIDE.pdf
           draft: false
+          # generate_release_notes adds the commit list under this; this block is
+          # what someone who has never seen the project needs before that.
+          generate_release_notes: true
           body: |
+            A Windows desktop app for drawing bounding boxes and exporting YOLO
+            datasets. One folder, one executable — no Python, no database, no
+            installer, no account, no internet.
+
             ## Install
 
-            Download the zip, extract it anywhere, and run
-            **Jawut Object Annotation Tools.exe**. Nothing else is required — no
-            Python, no database, no installer.
+            1. Download **`Jawut-Object-Annotation-Tools-*-windows.zip`** below
+            2. Extract it anywhere — your Desktop is fine
+            3. Run **`Jawut Object Annotation Tools.exe`**
 
-            Windows SmartScreen may show "Windows protected your PC" because the
-            application is not code signed. Click **More info**, then
-            **Run anyway**.
+            Windows 10 or 11, 64-bit. Nothing else is required.
 
-            `USER_GUIDE.pdf` is the illustrated walkthrough — hand it to anyone
-            who will never open this repository.
+            ## ⚠️ Windows will warn you the first time — it is not a virus warning
+
+            You will see a blue box saying **"Windows protected your PC —
+            Microsoft Defender SmartScreen prevented an unrecognised app from
+            starting."**
+
+            > Click **More info** (the small link, easy to miss), then
+            > **Run anyway**. Windows only asks once.
+
+            **Windows is not saying the file is harmful.** It is saying it does
+            not recognise the *publisher*. Windows trusts apps carrying a paid
+            **code-signing certificate**, which costs a few hundred dollars a
+            year; this build does not have one, so it looks unknown to
+            SmartScreen no matter what is inside it. Every new app from a small
+            team looks exactly like this.
+
+            If you would rather verify than trust:
+
+            - It binds to `127.0.0.1` only, so nothing outside your machine can
+              reach it, and it exits when you close the window.
+            - It touches only the folders you point it at.
+            - This zip was built and smoke-tested by GitHub Actions from the
+              tagged source, not uploaded from anyone's laptop.
+
+            If it will not start at all, Windows has flagged the download:
+            right-click the zip → **Properties** → tick **Unblock** → **OK**,
+            then extract again.
+
+            ## Documentation
+
+            **`USER_GUIDE.pdf`** below is the full illustrated walkthrough, from
+            a blank screen to an exported dataset. Hand it to anyone who will
+            never open this repository.

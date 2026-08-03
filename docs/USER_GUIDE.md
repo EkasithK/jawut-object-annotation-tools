@@ -15,9 +15,39 @@ Download the zip from the project's Releases page, extract it anywhere, and run
 Nothing else is needed. No Python, no database, no installer. The whole application
 is inside that folder.
 
-> **If Windows shows "Windows protected your PC"** — click **More info**, then
-> **Run anyway**. This appears because the application is not code signed, not
-> because anything is wrong with it.
+### Windows will warn you. That is expected, and it is not a virus warning.
+
+The first time you run it, Windows shows a blue box saying **"Windows protected
+your PC — Microsoft Defender SmartScreen prevented an unrecognised app from
+starting"**.
+
+**This does not mean anything is wrong with the application.** To run it:
+
+1. Click **More info** (the small link in the blue box — it is easy to miss)
+2. Click **Run anyway**
+
+That is all. Windows remembers your choice, so it only asks once.
+
+**Why it happens.** Windows trusts programs that carry a *code-signing
+certificate* — a paid identity certificate bought from a certificate authority
+for a few hundred dollars a year. This application does not have one. That is the
+entire reason for the warning: it is Windows saying "I do not recognise the
+publisher of this file", not "I found something harmful in this file". A brand-new
+program from a small team looks exactly like this to Windows on day one, whether
+it is safe or not.
+
+What you can check for yourself, if you want to:
+
+- The application makes **no internet connection at all** — it runs a small server
+  on your own machine, bound to `127.0.0.1`, which nothing outside your computer
+  can reach. It closes when you close the window.
+- It only reads and writes the folders you point it at.
+- The whole source is in this repository, and every release is built from it
+  automatically by GitHub Actions rather than uploaded from someone's laptop.
+
+If your workplace blocks it entirely, that is usually Windows marking the
+downloaded file. Right-click the zip → **Properties** → tick **Unblock** → **OK**,
+then extract it again.
 
 ---
 
