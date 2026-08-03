@@ -73,6 +73,12 @@ export const api = {
       ...(payload === undefined ? {} : { body: JSON.stringify(payload) }),
     }),
 
+  put: <T extends z.ZodTypeAny>(path: string, schema: T, payload?: unknown) =>
+    request(path, schema, {
+      method: "PUT",
+      ...(payload === undefined ? {} : { body: JSON.stringify(payload) }),
+    }),
+
   patch: <T extends z.ZodTypeAny>(path: string, schema: T, payload?: unknown) =>
     request(path, schema, {
       method: "PATCH",
