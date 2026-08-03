@@ -1,6 +1,6 @@
 [project]
 name = "jawut"
-version = "0.1.0"
+version = "0.2.0"
 description = "Jawut Object Annotation Tools — bounding-box annotation for YOLO datasets"
 requires-python = ">=3.11"
 dependencies = [

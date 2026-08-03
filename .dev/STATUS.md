@@ -1,29 +1,27 @@
-# Status — 2026-08-03 (end of session 1)
+# Status — 2026-08-03 (end of session 2)
 
 ## Now
 
-**Nothing is in progress. The tree is clean, everything is pushed, CI is green.**
+**Nothing is in progress. The tree is clean, everything is pushed.**
 
-All seven phases complete and **v0.1.0 released**, verified by a CI smoke test that launches the
-packaged exe on a Windows runner: it starts, serves its frontend, creates a project, creates a
-class, and refuses an unauthenticated call.
-
-Release: https://github.com/EkasithK/jawut-object-annotation-tools/releases/tag/v0.1.0
-(26 MB Windows zip + the user guide PDF)
+Session 2 shipped **v0.2.0**: native folder pickers everywhere, a one-step "Open existing dataset"
+flow, and the warm light theme.
 
 ### Pick up here next session
 
-Two things are waiting on a human, both on the Windows machine:
+Three things are waiting on a human, all on the Windows machine:
 
-1. **Run the released exe by hand.** CI proves it starts; nobody has confirmed it *feels* right
-   to label with. Download the zip, extract, double-click, expect the SmartScreen warning
-   (More info → Run anyway).
-2. **Do the real 1,340-image relabel**, 2 classes → 4, following `docs/HELMET_MIGRATION.md`.
-   The dataset is not in any repo — it lives at `C:/Users/kuaut/Desktop/helmet_wit/` per
-   `../helmet_ngob_reject/Data/data.yaml`. The migration itself is already covered end to end by
-   `tests/integration/test_helmet_migration.py` against a replica containing every awkward case.
-
-Then, in the order I would pick them up, see **Next** below.
+1. **Verify the native dialogs on Windows.** This is the one thing that could not be tested here.
+   `desktop.pick_folder` calls `webview.create_file_dialog` from an `anyio` worker thread; the
+   WinForms/EdgeChromium backend marshals to the UI thread internally, so it should be fine, but
+   nothing on Linux exercises it. If a dialog hangs or the window locks up, the fix is to marshal
+   explicitly through the pywebview window rather than calling from a worker thread. The typed
+   path field stays as a fallback either way, so a failure here degrades rather than blocks.
+2. **Run the released exe by hand** and confirm the new theme and the wizard feel right to label with.
+3. **Do the real 1,340-image relabel**, 2 classes to 4, following `docs/HELMET_MIGRATION.md`. The
+   dataset lives at `C:/Users/kuaut/Desktop/helmet_wit/` per `../helmet_ngob_reject/Data/data.yaml`.
+   With v0.2.0 the first half of that runbook collapses into **Open existing dataset** — browse to
+   the folder, confirm, done. The runbook has not been rewritten around that yet.
 
 ### To run it locally right now
 
@@ -32,10 +30,13 @@ uv run python -m jawut --no-window --port 8000   # then open http://127.0.0.1:80
 ```
 
 The server injects the launch token into the page, so a browser works with nothing to paste.
-WSL2 forwards localhost, so a Windows browser reaches it. Six real site photos to try it on are
-at `../helmet_ngob_reject/Data/paper_material/figure/`.
+WSL2 forwards localhost, so a Windows browser reaches it. **Browse buttons will not appear** —
+`native_dialogs` is false without a desktop window, by design. Six real site photos to try it on
+are at `../helmet_ngob_reject/Data/paper_material/figure/`.
 
 ## Done
+
+### Session 1 — v0.1.0
 
 - **Phase 1 — Skeleton.** uv/ruff/mypy-strict/pytest, pre-commit, CI (lint, format, typecheck,
   test, pip-audit + trivy), private repo under `EkasithK`.
@@ -45,37 +46,58 @@ at `../helmet_ngob_reject/Data/paper_material/figure/`.
   `BoxCanvas` with zoom/pan/draw/resize, class CRUD with safe delete, status filters, full
   keybindings.
 - **Phase 4 — Label import.** Two-step preview then apply with an explicit class mapping.
-  Auto-fixes only the unambiguous (pixel coordinates, rounding overflow); quarantines everything
-  else with file and line. Pose-format lines keep the box and drop keypoints.
-- **Phase 5 — Export.** Stratified split (seeded, on each image's rarest class) and flat mode,
-  `data.yaml` in Ultralytics shape, `export_manifest.json` for reproducibility.
-- **Phase 6 — Packaging.** `__main__.py` on an OS-assigned loopback port with a per-launch token,
-  pywebview window owning the process, PyInstaller `onedir` spec, Windows release workflow.
-- **Phase 7 — Migration.** `tests/integration/test_helmet_migration.py` runs the whole 2→4 class
-  job against a replica containing every awkward case; `docs/HELMET_MIGRATION.md` is the runbook.
-- **Docs.** `docs/USER_GUIDE.md` with 15 screenshots from a real session, and `docs/build_pdf.py`
-  to render it; the PDF is attached to the release for handing to someone who will never open the
-  repository.
-- 281 tests passing, 94% backend coverage, `ruff` and `mypy --strict` clean, frontend builds.
+  Auto-fixes only the unambiguous; quarantines everything else with file and line.
+- **Phase 5 — Export.** Stratified split (seeded) and flat mode, `data.yaml` in Ultralytics shape,
+  `export_manifest.json` for reproducibility.
+- **Phase 6 — Packaging.** Loopback port + per-launch token, pywebview window owning the process,
+  PyInstaller `onedir` spec, Windows release workflow with a smoke test.
+- **Phase 7 — Migration.** `tests/integration/test_helmet_migration.py` runs the whole 2-to-4 class
+  job against a replica; `docs/HELMET_MIGRATION.md` is the runbook.
+
+### Session 2 — v0.2.0
+
+- **Native folder pickers.** `jawut/desktop.py` holds the window handle `__main__` registers;
+  `/api/v1/system/capabilities` and `/api/v1/system/browse` expose it. `PathField.tsx` renders
+  **Browse…** only when capabilities says yes, and keeps the typed input as the fallback. Wired
+  into all five path fields: new project location, add images, import labels, export destination,
+  and the new open-project field.
+- **Open a project that is not in Recent.** There was previously no route to one at all — a fresh
+  machine or a cleared list was a dead end.
+- **"Open existing dataset" wizard.** `services/dataset.py` + `routers/datasets.py`. `scan` reports
+  layout, counts and class names without writing; `adopt` creates the project and imports images,
+  classes and labels in one call. Detects `images`/`labels` pairs, Ultralytics splits and flat
+  folders. Classes are created in `data.yaml` order so every `.txt` index keeps its meaning, and
+  every label folder is read before any class is created so a class used only in `test/` still
+  gets one.
+- **Explicit `data.yaml` picker in Import labels.** `importer.preview` takes an optional path.
+  Auto-discovery only ever looked beside the labels folder and one level up, which is why classes
+  showed up as `class_0, class_1, …` for a dataset whose config sits at the top of the tree.
+- **Warm light theme.** Cream surfaces, antique gold accent, dark canvas well behind its own
+  `--color-canvas*` tokens. `--color-on-accent` added because filled buttons used `text-surface-0`,
+  which became cream-on-gold once the surfaces flipped.
+- **Docs.** All 17 guide screenshots regenerated in the new theme, two of them new
+  (`01a-open-dataset`, `01b-dataset-found`), the guide rewritten around the new routes, PDF
+  rebuilt in the new palette. The release workflow now attaches `docs/USER_GUIDE.pdf` itself
+  rather than relying on a manual upload. Removed a `Ctrl+Z` / `Ctrl+Shift+Z` row from the README
+  keyboard table — it documented an undo feature that does not exist.
+- 326 tests passing, 94% backend coverage, `ruff` and `mypy --strict` clean, frontend builds,
+  eslint clean.
 
 ## Next
 
 Nothing is blocking. In rough order of value:
 
-1. **Native folder pickers** via `webview.create_file_dialog(FOLDER_DIALOG)`, replacing the typed
-   paths in the Add images, Import labels and Export dialogs. This is the weakest part of the
-   experience for a non-technical annotator and the highest-value change left. Needs a small
-   endpoint that only works when running windowed, with the typed field as the fallback.
-2. **Undo/redo in the UI.** `edit_log` already stores before/after JSON for every save, so the
-   data exists; what is missing is an endpoint to walk it and `Ctrl+Z` / `Ctrl+Shift+Z` wired up
-   in `Workspace.tsx`.
-3. **An icon** at `packaging/icon.ico` — `jawut.spec` picks it up automatically if present, and
-   currently ships the default PyInstaller icon.
-4. **Class reordering in the UI.** The API (`POST /api/v1/classes/reorder`) and the service are
-   done and tested; the palette has no drag handle. Matters because class order decides the
-   exported indices.
-5. **Bulk reassign in the UI.** `POST /api/v1/annotations/reassign` exists and is tested, but is
-   only reachable today through the delete-class dialog.
+1. **Undo/redo.** `edit_log` already stores before/after JSON for every save, so the data exists;
+   what is missing is an endpoint to walk it and `Ctrl+Z` / `Ctrl+Shift+Z` in `Workspace.tsx`.
+   Note `Workspace.tsx:221` returns early on any modifier key, so that guard has to be narrowed
+   first. The README no longer claims this works.
+2. **An icon** at `packaging/icon.ico` — `jawut.spec` picks it up automatically if present, and
+   currently ships the default PyInstaller icon. More noticeable now the app looks deliberate.
+3. **Class reordering in the UI.** `POST /api/v1/classes/reorder` and the service are done and
+   tested; the palette has no drag handle. Matters because class order decides exported indices.
+4. **Bulk reassign in the UI.** `POST /api/v1/annotations/reassign` exists and is tested, but is
+   only reachable through the delete-class dialog.
+5. **Rewrite `docs/HELMET_MIGRATION.md` around the wizard** — its first half is now one click.
 6. Consider a code-signing certificate if this gets handed to more than a few people — it is the
    only thing standing between them and a SmartScreen warning.
 
@@ -110,6 +132,10 @@ project is open.
 | `POST` | `/api/v1/labels/preview` | Read a label folder, write nothing |
 | `POST` | `/api/v1/labels/import` | Apply with an explicit class mapping |
 | `POST` | `/api/v1/export` | Write a YOLO dataset |
+| `GET` | `/api/v1/system/capabilities` | Whether native dialogs exist (false outside the window) |
+| `POST` | `/api/v1/system/browse` | Open a folder or data.yaml chooser; `path: null` on cancel |
+| `POST` | `/api/v1/datasets/scan` | Read a dataset folder, write nothing |
+| `POST` | `/api/v1/datasets/adopt` | Create a project from it, images + classes + labels |
 
 ## Notes for the next session
 
@@ -142,6 +168,23 @@ project is open.
   `print`, and uvicorn's logging setup, then raise and kill the process. `ensure_streams()` in
   `__main__.py` handles it. Nothing outside Windows reproduces this, and it took a failed release
   build to surface — do not remove that call.
+- **Native dialogs need the desktop window.** `desktop.set_window` is called by `__main__`
+  only in windowed mode, so `capabilities` reports false under `uvicorn`, `--no-window` and
+  every test. That is deliberate — the frontend hides **Browse…** and leaves the typed field.
+  Do not "fix" a missing Browse button in dev; check you are running the real window.
+- The dialog blocks until the user answers, so `routers/system.py` runs it through
+  `anyio.to_thread.run_sync`. On the event loop it would stall every other request for as
+  long as the chooser stayed open.
+- Regenerating the screenshots needs a server **without** a launch token — use
+  `uv run uvicorn jawut.app:app --port <port>`, not `python -m jawut`, because the capture
+  script drives the API directly with no `X-Jawut-Token` header. It also needs
+  `PLAYWRIGHT_BROWSERS_PATH` pointed at the real `~/.cache/ms-playwright`, since `HOME` is
+  redirected to a throwaway directory to keep local paths out of the images. The script fakes
+  `capabilities` and `browse` with `page.route` so the Browse buttons appear in the captures —
+  without that the guide would show a UI nobody running the exe ever sees.
+- Guide screenshots 05 onward are converted to JPEG after capture; 01-04 stay PNG. The
+  photographs triple the PDF size as PNG for no visible gain, and the flat UI shots stay
+  sharper as PNG.
 - Screenshots for the guide are regenerated by `.dev/capture_screenshots.py`. It drives the app
   with Playwright, seeds boxes through the API rather than simulating drags (a precise drag is far
   more fragile), and runs with `HOME` and `JAWUT_APP_DATA_DIR` pointed at a throwaway directory so

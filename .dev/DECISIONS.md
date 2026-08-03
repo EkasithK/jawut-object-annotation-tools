@@ -155,3 +155,57 @@ validation numbers meaningless.
 
 **Rejected.** Plain random splitting (can strand a rare class), and multi-label stratification
 (materially more complex for a gain that does not show up at this dataset size).
+
+---
+
+## 2026-08-03 — Native dialogs live behind an API, with the typed field as fallback
+
+**Decision.** `jawut.desktop` holds the pywebview window handle that `__main__` registers, and
+`/api/v1/system/{capabilities,browse}` exposes it. The frontend asks `capabilities` once and only
+renders **Browse…** when the answer is yes; the path input stays editable either way.
+
+**Why.** Typing a Windows path was the single worst part of the experience for a non-technical
+annotator, and it appeared in five places. A native dialog only exists inside the desktop window,
+so the dev server in a browser, the `--no-window` build and every test have no way to open one —
+if the button were the only route, those would all be dead ends. The dialog blocks until answered,
+so the route runs it on a worker thread via `anyio.to_thread`; on the event loop it would stall
+every other request for as long as the chooser stayed open.
+
+**Rejected.** A `<input type="file" webkitdirectory>` (gives file handles, not the folder path the
+server needs, and cannot pick an empty output folder), and calling pywebview's JS bridge directly
+from the page (splits path handling across two runtimes for no gain).
+
+---
+
+## 2026-08-03 — "Open existing dataset" reads the folder before creating anything
+
+**Decision.** `datasets/scan` reports layout, counts and class names and writes nothing;
+`datasets/adopt` then creates the project, imports the images, creates the classes in `data.yaml`
+order and applies the labels under an identity mapping.
+
+**Why.** The three-step route asked someone to understand the shape of their own data before the
+tool would help them, and most people arrive with a folder a training script wrote. Reading first
+means a wrong guess is not a dead end — an unlabeled folder reports "no labels yet" and the same
+button still works. Classes are created in config order so the integer in every `.txt` keeps its
+meaning, which is the one thing a relabel cannot get wrong. `adopt` reads every label folder before
+creating any class, because a class used only in `test/` would otherwise have nowhere to land.
+
+**Rejected.** Auto-detecting on the welcome screen without a confirmation step (silently building
+the wrong project from a folder full of unrelated images), and reusing the existing three endpoints
+from the frontend (four round trips, and a half-built project if one fails).
+
+---
+
+## 2026-08-03 — Light chrome, dark canvas
+
+**Decision.** The palette is warm cream with an antique-gold accent; the canvas well stays dark
+via its own `--color-canvas*` tokens.
+
+**Why.** Requested. The split is not a compromise — photographs and the class colours drawn over
+them read best against something dark, and inverting the canvas too would mean darkening every
+class colour to keep it visible. Accent and status values were picked to clear 4.5:1 as text on
+cream, and `--color-on-accent` exists because the old buttons used `text-surface-0`, which became
+cream-on-gold when the surfaces flipped.
+
+**Rejected.** A light/dark toggle (doubles the surface area to check on every screen for a
+single-user desktop tool), and a light canvas (washes out bright box colours).
