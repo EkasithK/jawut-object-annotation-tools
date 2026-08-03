@@ -12,13 +12,15 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from jawut import APP_NAME, __version__
 from jawut.models import Envelope, ErrorDetail, HealthStatus, ReadyStatus
+from jawut.routers.projects import router as projects_router
+from jawut.session import NoProjectOpenError
 
 LAUNCH_TOKEN_ENV = "JAWUT_LAUNCH_TOKEN"  # noqa: S105  variable name, not a secret
 LAUNCH_TOKEN_HEADER = "X-Jawut-Token"  # noqa: S105  header name, not a secret
@@ -73,12 +75,24 @@ def create_app() -> FastAPI:
     async def health() -> Envelope[HealthStatus]:
         return Envelope(data=HealthStatus(status="ok", version=__version__))
 
+    @app.exception_handler(NoProjectOpenError)
+    async def no_project_handler(
+        request: Request, exc: NoProjectOpenError
+    ) -> JSONResponse:
+        envelope: Envelope[None] = Envelope(
+            error=ErrorDetail(code="NO_PROJECT_OPEN", message=str(exc))
+        )
+        return JSONResponse(status_code=409, content=envelope.model_dump(mode="json"))
+
     @app.get("/ready")
     async def ready() -> Envelope[ReadyStatus]:
         from jawut.db.connection import probe
 
         return Envelope(data=ReadyStatus(db=probe()))
 
+    app.include_router(projects_router, dependencies=[Depends(require_launch_token)])
+
+    # Mounted last so it cannot shadow the API routes above.
     if STATIC_DIR.is_dir():
         app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
 

@@ -152,25 +152,26 @@ Keybindings are a v1 requirement, not polish — they are the entire reason CVAT
 
 ## Phases
 
-### Phase 1 — Skeleton
-- [ ] `pyproject.toml`, ruff + mypy strict + pytest config
-- [ ] `.pre-commit-config.yaml`, `.gitignore`
-- [ ] `.dev/` tracking files seeded
-- [ ] Sub-project `CLAUDE.md` recording overrides of the root standards
-- [ ] `README.md`
-- [ ] Python package skeleton under `src/jawut/`
-- [ ] Vite + React + TS frontend scaffold
-- [ ] `.github/workflows/ci.yml` — lint, format, typecheck, test
-- [ ] Private repo created under `EkasithK`, first commit pushed
+### Phase 1 — Skeleton ✅
+- [x] `pyproject.toml`, ruff + mypy strict + pytest config
+- [x] `.pre-commit-config.yaml`, `.gitignore`, `.env.example`
+- [x] `.dev/` tracking files seeded
+- [x] Sub-project `CLAUDE.md` recording overrides of the root standards
+- [x] `README.md`
+- [x] Python package skeleton under `src/jawut/`
+- [x] Vite + React + TS frontend scaffold
+- [x] `.github/workflows/ci.yml` — lint, format, typecheck, test, security scan
+- [x] Private repo created under `EkasithK`, first commit pushed
 
-### Phase 2 — Core
-- [ ] `db/schema.sql` v1
-- [ ] `db/connection.py` — WAL, `foreign_keys=ON`, per-project connection
-- [ ] `db/migrations.py` — `PRAGMA user_version` runner
-- [ ] `config.py` — `%APPDATA%` settings, recent projects list
-- [ ] `app.py` — FastAPI factory + lifespan
-- [ ] Projects service + router: create, open, list recent
-- [ ] Welcome screen UI (New / Open / Recent)
+### Phase 2 — Core ✅
+- [x] `db/schema.sql` v1
+- [x] `db/connection.py` — WAL, `foreign_keys=ON`, per-project connection
+- [x] `db/migrations.py` — `PRAGMA user_version` runner
+- [x] `config.py` — `%APPDATA%` settings, recent projects list
+- [x] `app.py` — FastAPI factory + lifespan
+- [x] `session.py` — the one open project, shared by every router
+- [x] Projects service + router: create, open, close, forget, list recent
+- [x] Welcome screen UI (New / Recent)
 
 ### Phase 3 — Labeling
 - [ ] Image import: copy into project or link, Pillow dimensions, sha256 dedupe

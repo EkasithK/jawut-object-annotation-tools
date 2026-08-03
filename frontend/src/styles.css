@@ -15,8 +15,12 @@
   --color-ink-muted: #9aa3b2;
   --color-ink-faint: #6b7484;
 
-  --color-accent: #4c8dff;
-  --color-accent-hover: #6ba0ff;
+  /* Signal orange, borrowed from the high-visibility equipment this tool exists
+     to label. It marks selection and primary action only — class colours own the
+     canvas, and the chrome must never compete with them. */
+  --color-accent: #ff7a3d;
+  --color-accent-hover: #ff9662;
+  --color-accent-dim: #7a3a1c;
 
   --color-status-unlabeled: #6b7484;
   --color-status-progress: #d9a441;

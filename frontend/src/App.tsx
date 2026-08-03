@@ -1,58 +1,45 @@
-import { useEffect, useState } from "react";
-
-import { getHealth } from "./api/client";
-
-type Connection =
-  | { state: "connecting" }
-  | { state: "ready"; version: string }
-  | { state: "failed"; message: string };
+import { closeProject } from "./api/projects";
+import { Welcome } from "./screens/Welcome";
+import { useAppStore } from "./store";
 
 export function App() {
-  const [connection, setConnection] = useState<Connection>({
-    state: "connecting",
-  });
+  const project = useAppStore((s) => s.project);
+  const setProject = useAppStore((s) => s.setProject);
 
-  useEffect(() => {
-    let cancelled = false;
-    getHealth()
-      .then((health) => {
-        if (!cancelled) setConnection({ state: "ready", version: health.version });
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) {
-          setConnection({
-            state: "failed",
-            message: error instanceof Error ? error.message : String(error),
-          });
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  if (!project) {
+    return <Welcome />;
+  }
 
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-4 px-6">
-      <h1 className="text-2xl font-semibold tracking-tight">
-        Jawut Object Annotation Tools
-      </h1>
+    <div className="flex h-full flex-col">
+      <header
+        className="flex shrink-0 items-baseline gap-3 border-b border-line
+          px-4 py-2.5"
+      >
+        <span className="font-medium">{project.name}</span>
+        <span
+          className="min-w-0 flex-1 truncate font-mono text-[11px] text-ink-faint"
+          title={project.path}
+        >
+          {project.path}
+        </span>
+        <button
+          onClick={() => {
+            void closeProject().then(() => setProject(null));
+          }}
+          className="text-[12px] text-ink-muted transition-colors hover:text-ink
+            focus-visible:outline focus-visible:outline-2
+            focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          Close project
+        </button>
+      </header>
 
-      {connection.state === "connecting" && (
-        <p className="text-ink-muted">Connecting…</p>
-      )}
-
-      {connection.state === "ready" && (
-        <p className="text-ink-muted">
-          Connected — version{" "}
-          <span className="font-mono text-ink">{connection.version}</span>
+      <main className="flex flex-1 items-center justify-center px-6">
+        <p className="text-ink-faint">
+          Add images to start labeling.
         </p>
-      )}
-
-      {connection.state === "failed" && (
-        <p className="text-status-review">
-          Cannot reach the backend: {connection.message}
-        </p>
-      )}
+      </main>
     </div>
   );
 }
