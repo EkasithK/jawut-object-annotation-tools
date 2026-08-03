@@ -22,15 +22,23 @@ from jawut.util import new_id, now_iso
 
 #: Distinct, colourblind-safe defaults handed out in order as classes are created.
 #: Deliberately avoids the interface accent so a class never reads as "selected".
+#: Chosen to survive the photograph, not to look calm next to each other.
+#:
+#: The previous palette included sand, olive, umber and a muted green — which are
+#: the colours of dirt, vegetation and machinery, so on a real site photo those
+#: classes became invisible. Every colour here is saturated past anything that
+#: occurs naturally outdoors. The first four avoid the yellow-green of
+#: high-visibility clothing and the yellow of heavy equipment as well, since a
+#: project with four classes never reaches the last four.
 DEFAULT_COLORS: tuple[str, ...] = (
-    "#4c8dff",  # blue
-    "#3fa96a",  # green
-    "#c77dff",  # violet
-    "#e5c454",  # sand
-    "#4fd1c5",  # teal
-    "#f2789f",  # rose
-    "#8fb339",  # olive
-    "#b0703c",  # umber
+    "#ff2d95",  # magenta
+    "#00e5ff",  # cyan
+    "#00ff9d",  # spring green
+    "#a970ff",  # violet
+    "#ff1744",  # red
+    "#3d8bff",  # blue
+    "#ff9100",  # orange
+    "#ffe93d",  # yellow
 )
 
 _HEX_COLOR_LENGTH = 7

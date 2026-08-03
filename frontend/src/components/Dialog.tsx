@@ -39,7 +39,7 @@ export function Dialog({
         bg-surface-1 p-0 text-ink backdrop:bg-black/60"
     >
       <div className="flex items-baseline justify-between border-b border-line px-4 py-3">
-        <h2 className="text-[13px] font-medium">{title}</h2>
+        <h2 className="text-[14px] font-medium">{title}</h2>
         <button
           onClick={onClose}
           aria-label="Close"

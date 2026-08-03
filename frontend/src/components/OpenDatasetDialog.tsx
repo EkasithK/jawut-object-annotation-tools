@@ -123,7 +123,7 @@ export function OpenDatasetDialog({
           <button
             type="submit"
             disabled={busy || !source.trim()}
-            className="mt-4 w-full bg-accent px-3 py-2 text-[13px] font-medium
+            className="mt-4 w-full bg-accent px-3 py-2 text-[14px] font-medium
               text-on-accent transition-colors hover:bg-accent-hover
               disabled:bg-surface-3 disabled:text-ink-faint"
           >
@@ -134,11 +134,11 @@ export function OpenDatasetDialog({
 
       {step === "confirm" && scan && (
         <>
-          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
+          <p className="font-mono text-[12px] uppercase tracking-[0.16em] font-medium text-ink-faint">
             Found in {scan.root}
           </p>
 
-          <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[12px]">
+          <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[13px]">
             <Stat label="Images" value={scan.image_count.toLocaleString()} />
             <Stat label="Label files" value={scan.label_count.toLocaleString()} />
             <Stat
@@ -154,13 +154,13 @@ export function OpenDatasetDialog({
           </dl>
 
           {scan.class_names.length > 0 && (
-            <p className="mt-2 text-[12px] leading-relaxed text-ink-muted">
+            <p className="mt-2 text-[13px] leading-relaxed text-ink-muted">
               {scan.class_names.join(", ")}
             </p>
           )}
 
           {scan.label_count > 0 && scan.class_names.length === 0 && (
-            <p className="mt-2 text-[11px] leading-relaxed text-status-progress">
+            <p className="mt-2 text-[12px] leading-relaxed text-status-progress">
               No data.yaml was found, so classes will arrive as class_0, class_1, …
               You can rename them afterwards without touching any labels.
             </p>
@@ -168,7 +168,7 @@ export function OpenDatasetDialog({
 
           {nothingFound ? (
             <p className="mt-4 border-l-2 border-status-review bg-surface-2 px-3
-              py-2 text-[12px] leading-relaxed">
+              py-2 text-[13px] leading-relaxed">
               There are no images in this folder. Pick a different one, or close
               this and use New project to start empty.
             </p>
@@ -177,7 +177,7 @@ export function OpenDatasetDialog({
               <div>
                 <label
                   htmlFor="dataset-name"
-                  className="mb-1.5 block text-[11px] uppercase tracking-wider
+                  className="mb-1.5 block text-[12px] uppercase tracking-wider font-medium
                     text-ink-muted"
                 >
                   Project name
@@ -188,7 +188,7 @@ export function OpenDatasetDialog({
                   onChange={(e) => setName(e.target.value)}
                   spellCheck={false}
                   className="w-full border border-line bg-surface-2 px-2.5 py-2
-                    text-[12px] focus:border-accent focus:outline-none"
+                    text-[13px] focus:border-accent focus:outline-none"
                 />
               </div>
 
@@ -199,7 +199,7 @@ export function OpenDatasetDialog({
                 onChange={setParentDir}
               />
 
-              <label className="flex items-center gap-2 text-[12px]">
+              <label className="flex items-center gap-2 text-[13px]">
                 <input
                   type="checkbox"
                   checked={copyImages}
@@ -208,7 +208,7 @@ export function OpenDatasetDialog({
                 />
                 Copy the images into the project
               </label>
-              <p className="ml-6 -mt-2 text-[11px] leading-relaxed text-ink-faint">
+              <p className="ml-6 -mt-2 text-[12px] leading-relaxed text-ink-faint">
                 Keeps the project self-contained and leaves the original folder
                 untouched. Turn off for very large sets.
               </p>
@@ -218,7 +218,7 @@ export function OpenDatasetDialog({
           <div className="mt-4 flex gap-2">
             <button
               onClick={() => setStep("choose")}
-              className="border border-line-strong px-3 py-2 text-[13px]
+              className="border border-line-strong px-3 py-2 text-[14px]
                 transition-colors hover:border-accent"
             >
               Back
@@ -226,7 +226,7 @@ export function OpenDatasetDialog({
             <button
               disabled={busy || nothingFound || !name.trim()}
               onClick={() => void runAdopt()}
-              className="flex-1 bg-accent px-3 py-2 text-[13px] font-medium
+              className="flex-1 bg-accent px-3 py-2 text-[14px] font-medium
                 text-on-accent transition-colors hover:bg-accent-hover
                 disabled:bg-surface-3 disabled:text-ink-faint"
             >
@@ -238,7 +238,7 @@ export function OpenDatasetDialog({
 
       {step === "done" && result && (
         <>
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-[12px]">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-[13px]">
             <Stat label="Images" value={result.images_imported.toLocaleString()} />
             <Stat label="Classes" value={result.classes_created} />
             <Stat label="Boxes" value={result.boxes_created.toLocaleString()} />
@@ -259,14 +259,14 @@ export function OpenDatasetDialog({
 
           {result.issues.length > 0 && (
             <details className="mt-3 border border-line">
-              <summary className="cursor-pointer px-2 py-1.5 text-[12px] text-ink-muted">
+              <summary className="cursor-pointer px-2 py-1.5 text-[13px] text-ink-muted">
                 {result.issues.length} lines needed attention
               </summary>
               <ul className="max-h-40 overflow-y-auto border-t border-line">
                 {result.issues.slice(0, 200).map((issue, index) => (
                   <li
                     key={`${issue.file}-${issue.line}-${index}`}
-                    className="border-b border-line px-2 py-1.5 font-mono text-[11px]
+                    className="border-b border-line px-2 py-1.5 font-mono text-[12px]
                       last:border-b-0"
                   >
                     <span>
@@ -288,7 +288,7 @@ export function OpenDatasetDialog({
               close();
               onOpened(project);
             }}
-            className="mt-4 w-full bg-accent px-3 py-2 text-[13px] font-medium
+            className="mt-4 w-full bg-accent px-3 py-2 text-[14px] font-medium
               text-on-accent transition-colors hover:bg-accent-hover"
           >
             Start labeling
@@ -297,7 +297,7 @@ export function OpenDatasetDialog({
       )}
 
       {error && (
-        <p className="mt-4 border-l-2 border-status-review bg-surface-2 px-3 py-2 text-[12px]">
+        <p className="mt-4 border-l-2 border-status-review bg-surface-2 px-3 py-2 text-[13px]">
           {error}
         </p>
       )}

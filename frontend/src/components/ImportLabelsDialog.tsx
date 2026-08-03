@@ -142,7 +142,7 @@ export function ImportLabelsDialog({
           <button
             type="submit"
             disabled={busy || !labelsDir.trim()}
-            className="mt-4 w-full bg-accent px-3 py-2 text-[13px] font-medium
+            className="mt-4 w-full bg-accent px-3 py-2 text-[14px] font-medium
               text-on-accent transition-colors hover:bg-accent-hover
               disabled:bg-surface-3 disabled:text-ink-faint"
           >
@@ -153,7 +153,7 @@ export function ImportLabelsDialog({
 
       {step === "map" && preview && (
         <>
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-[12px]">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-[13px]">
             <Stat label="Label files" value={preview.label_files} />
             <Stat label="Matched images" value={preview.matched_images} />
             <Stat
@@ -167,7 +167,7 @@ export function ImportLabelsDialog({
             />
           </dl>
 
-          <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
+          <p className="mt-4 font-mono text-[12px] uppercase tracking-[0.16em] font-medium text-ink-faint">
             Map classes
             {!preview.source_classes.from_data_yaml && " · no data.yaml found"}
           </p>
@@ -179,11 +179,11 @@ export function ImportLabelsDialog({
                 className="flex items-center gap-2 border-b border-line px-2 py-1.5
                   last:border-b-0"
               >
-                <span className="w-6 shrink-0 font-mono text-[11px] text-ink-faint">
+                <span className="w-6 shrink-0 font-mono text-[12px] text-ink-faint">
                   {index}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[12px]">{name}</span>
-                <span className="shrink-0 font-mono text-[10px] text-ink-faint">
+                <span className="min-w-0 flex-1 truncate text-[13px]">{name}</span>
+                <span className="shrink-0 font-mono text-[12px] text-ink-faint">
                   {preview.box_counts[String(index)] ?? 0}
                 </span>
                 <span aria-hidden className="text-ink-faint">
@@ -196,7 +196,7 @@ export function ImportLabelsDialog({
                   }
                   aria-label={`Map class ${name}`}
                   className="w-40 shrink-0 border border-line bg-surface-2 px-1.5 py-1
-                    text-[12px] focus:border-accent focus:outline-none"
+                    text-[13px] focus:border-accent focus:outline-none"
                 >
                   <option value={NEW}>Create “{name}”</option>
                   {classes.map((cls) => (
@@ -210,7 +210,7 @@ export function ImportLabelsDialog({
             ))}
           </ul>
 
-          <label className="mt-3 flex items-center gap-2 text-[12px]">
+          <label className="mt-3 flex items-center gap-2 text-[13px]">
             <input
               type="checkbox"
               checked={overwrite}
@@ -225,7 +225,7 @@ export function ImportLabelsDialog({
           <div className="mt-4 flex gap-2">
             <button
               onClick={() => setStep("choose")}
-              className="border border-line-strong px-3 py-2 text-[13px]
+              className="border border-line-strong px-3 py-2 text-[14px]
                 transition-colors hover:border-accent"
             >
               Back
@@ -233,7 +233,7 @@ export function ImportLabelsDialog({
             <button
               disabled={busy || preview.matched_images === 0}
               onClick={() => void runImport()}
-              className="flex-1 bg-accent px-3 py-2 text-[13px] font-medium
+              className="flex-1 bg-accent px-3 py-2 text-[14px] font-medium
                 text-on-accent transition-colors hover:bg-accent-hover
                 disabled:bg-surface-3 disabled:text-ink-faint"
             >
@@ -245,7 +245,7 @@ export function ImportLabelsDialog({
 
       {step === "done" && result && (
         <>
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-[12px]">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-[13px]">
             <Stat label="Images labeled" value={result.images_labeled} />
             <Stat label="Boxes created" value={result.boxes_created} />
             <Stat label="Marked empty" value={result.images_marked_empty} />
@@ -260,7 +260,7 @@ export function ImportLabelsDialog({
 
           <button
             onClick={close}
-            className="mt-4 w-full bg-accent px-3 py-2 text-[13px] font-medium
+            className="mt-4 w-full bg-accent px-3 py-2 text-[14px] font-medium
               text-on-accent transition-colors hover:bg-accent-hover"
           >
             Done
@@ -269,7 +269,7 @@ export function ImportLabelsDialog({
       )}
 
       {error && (
-        <p className="mt-4 border-l-2 border-status-review bg-surface-2 px-3 py-2 text-[12px]">
+        <p className="mt-4 border-l-2 border-status-review bg-surface-2 px-3 py-2 text-[13px]">
           {error}
         </p>
       )}
@@ -304,7 +304,7 @@ function IssueList({ issues }: { issues: ImportIssue[] }) {
 
   return (
     <details className="mt-3 border border-line">
-      <summary className="cursor-pointer px-2 py-1.5 text-[12px] text-ink-muted">
+      <summary className="cursor-pointer px-2 py-1.5 text-[13px] text-ink-muted">
         {rejections.length > 0 && (
           <span className="text-status-review">{rejections.length} rejected</span>
         )}
@@ -315,7 +315,7 @@ function IssueList({ issues }: { issues: ImportIssue[] }) {
         {issues.map((issue, index) => (
           <li
             key={`${issue.file}-${issue.line}-${index}`}
-            className="border-b border-line px-2 py-1.5 font-mono text-[11px]
+            className="border-b border-line px-2 py-1.5 font-mono text-[12px]
               last:border-b-0"
           >
             <span className={REPAIR_KINDS.has(issue.kind) ? "text-ink-muted" : ""}>

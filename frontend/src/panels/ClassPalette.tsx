@@ -39,7 +39,7 @@ export function ClassPalette({
   return (
     <div className="flex flex-col">
       <h2
-        className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em]
+        className="px-3 py-2 font-mono text-[12px] uppercase tracking-[0.18em] font-medium
           text-ink-faint"
       >
         Classes
@@ -65,7 +65,7 @@ export function ClassPalette({
                       e.stopPropagation();
                     }}
                     className="w-full border border-accent bg-surface-1 px-1.5 py-0.5
-                      text-[12px] focus:outline-none"
+                      text-[13px] focus:outline-none"
                   />
                 </form>
               ) : (
@@ -89,12 +89,12 @@ export function ClassPalette({
                       className="h-2.5 w-2.5 shrink-0"
                       style={{ background: cls.color }}
                     />
-                    <span className="min-w-0 flex-1 truncate text-[12px]">
+                    <span className="min-w-0 flex-1 truncate text-[13px]">
                       {cls.name}
                     </span>
                     {index < 9 && (
                       <kbd
-                        className="shrink-0 font-mono text-[10px] text-ink-faint"
+                        className="shrink-0 font-mono text-[12px] text-ink-faint"
                         title={`Press ${index + 1} to assign this class`}
                       >
                         {index + 1}
@@ -128,14 +128,14 @@ export function ClassPalette({
           onKeyDown={(e) => e.stopPropagation()}
           placeholder="Add a class…"
           spellCheck={false}
-          className="w-full border border-line bg-surface-1 px-2 py-1.5 text-[12px]
+          className="w-full border border-line bg-surface-1 px-2 py-1.5 text-[13px]
             placeholder:text-ink-faint hover:border-line-strong focus:border-accent
             focus:outline-none"
         />
       </form>
 
       {classes.length === 0 && (
-        <p className="px-3 pb-3 text-[11px] leading-relaxed text-ink-faint">
+        <p className="px-3 pb-3 text-[12px] leading-relaxed text-ink-faint">
           Add at least one class before you can draw a box.
         </p>
       )}

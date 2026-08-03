@@ -20,8 +20,10 @@
   --color-line-strong: #bfb094;
 
   --color-ink: #2a2620;
-  --color-ink-muted: #6b6152;
-  --color-ink-faint: #746a59;
+  /* Darker than a conventional muted grey. Small text over a warm surface loses
+     apparent contrast, and most of this interface is small text. */
+  --color-ink-muted: #574e40;
+  --color-ink-faint: #6b6152;
 
   /* Antique gold, dark enough that the near-white on a filled button clears
      4.5:1 and that the same value reads as text on cream. Hover goes darker,
@@ -60,7 +62,7 @@ body {
   background: var(--color-surface-0);
   color: var(--color-ink);
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 15px;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
 }

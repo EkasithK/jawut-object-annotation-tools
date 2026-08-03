@@ -18,7 +18,7 @@ export function BoxList({
   return (
     <div className="flex min-h-0 flex-1 flex-col border-t border-line">
       <h2
-        className="px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em]
+        className="px-3 py-2 font-mono text-[12px] uppercase tracking-[0.18em] font-medium
           text-ink-faint"
       >
         Boxes
@@ -49,7 +49,7 @@ export function BoxList({
                 onKeyDown={(e) => e.stopPropagation()}
                 aria-label={`Class of box ${index + 1}`}
                 className="min-w-0 flex-1 cursor-pointer border-none bg-transparent
-                  text-[12px] text-ink focus:outline-none"
+                  text-[13px] text-ink focus:outline-none"
               >
                 {classes.map((option) => (
                   <option key={option.id} value={option.id} className="bg-surface-2">
@@ -72,7 +72,7 @@ export function BoxList({
         })}
 
         {boxes.length === 0 && (
-          <li className="px-3 py-4 text-[11px] leading-relaxed text-ink-faint">
+          <li className="px-3 py-4 text-[12px] leading-relaxed text-ink-faint">
             No boxes yet. Press <Key>W</Key> and drag to draw one.
           </li>
         )}
@@ -84,7 +84,7 @@ export function BoxList({
 function Key({ children }: { children: React.ReactNode }) {
   return (
     <kbd
-      className="border border-line-strong px-1 font-mono text-[10px] text-ink-muted"
+      className="border border-line-strong px-1 font-mono text-[12px] text-ink-muted"
     >
       {children}
     </kbd>

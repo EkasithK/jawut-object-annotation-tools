@@ -42,7 +42,10 @@ export function ImageList({
             <button
               key={entry.id}
               onClick={() => onFilterChange(entry.id)}
-              className={`px-2 py-1 font-mono text-[10px] uppercase tracking-wider
+              // No letter-spacing here, unlike the other small labels: five of
+              // these have to fit the sidebar on one row, and tracking is what
+              // pushed them onto two once the text got bigger.
+              className={`px-1.5 py-1 font-mono text-[12px] font-medium uppercase
                 transition-colors focus-visible:outline focus-visible:outline-2
                 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
                   active
@@ -51,7 +54,7 @@ export function ImageList({
                 }`}
             >
               {entry.label}
-              <span className="ml-1.5 opacity-60">{countFor(entry.id)}</span>
+              <span className="ml-1 opacity-70">{countFor(entry.id)}</span>
             </button>
           );
         })}
@@ -77,7 +80,7 @@ export function ImageList({
                   }`}
                 />
                 <span
-                  className={`min-w-0 flex-1 truncate text-[12px] ${
+                  className={`min-w-0 flex-1 truncate text-[13px] ${
                     current ? "text-ink" : "text-ink-muted"
                   }`}
                   title={image.filename}
@@ -85,7 +88,7 @@ export function ImageList({
                   {image.filename}
                 </span>
                 {image.annotation_count > 0 && (
-                  <span className="shrink-0 font-mono text-[10px] text-ink-faint">
+                  <span className="shrink-0 font-mono text-[12px] text-ink-faint">
                     {image.annotation_count}
                   </span>
                 )}
@@ -95,7 +98,7 @@ export function ImageList({
         })}
 
         {images.length === 0 && (
-          <li className="px-3 py-6 text-center text-[12px] text-ink-faint">
+          <li className="px-3 py-6 text-center text-[13px] text-ink-faint">
             Nothing here.
           </li>
         )}

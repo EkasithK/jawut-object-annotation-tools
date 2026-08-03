@@ -133,7 +133,7 @@ export function Welcome() {
             </button>
           </form>
 
-          <p className="mt-2.5 font-mono text-[11px] leading-relaxed text-ink-faint">
+          <p className="mt-2.5 font-mono text-[12px] leading-relaxed text-ink-faint">
             Creates {parentDir || "…"}
             {parentDir && !parentDir.endsWith("/") ? "/" : ""}
             {name.trim() || "<name>"}
@@ -155,7 +155,7 @@ export function Welcome() {
             <span className="block text-sm font-medium">
               Open existing dataset…
             </span>
-            <span className="mt-0.5 block text-[11px] leading-relaxed text-ink-faint">
+            <span className="mt-0.5 block text-[12px] leading-relaxed text-ink-faint">
               Browse to a folder of images. Labels, class names and folder layout
               are detected for you.
             </span>
@@ -214,13 +214,13 @@ export function Welcome() {
                       {entry.name}
                     </span>
                     <span
-                      className="min-w-0 flex-1 truncate font-mono text-[11px]
+                      className="min-w-0 flex-1 truncate font-mono text-[12px]
                         text-ink-faint"
                       title={entry.path}
                     >
                       {shortPath(entry.path)}
                     </span>
-                    <span className="shrink-0 font-mono text-[11px] text-ink-faint">
+                    <span className="shrink-0 font-mono text-[12px] text-ink-faint">
                       {relativeDay(entry.opened_at)}
                     </span>
                   </button>
@@ -247,7 +247,7 @@ export function Welcome() {
           <p
             role="alert"
             className="mt-8 border-l-2 border-status-review bg-surface-1 px-4 py-3
-              text-[13px] text-ink"
+              text-[14px] text-ink"
           >
             {error}
           </p>
@@ -267,7 +267,7 @@ export function Welcome() {
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <h2
-      className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint"
+      className="font-mono text-[12px] uppercase tracking-[0.18em] font-medium text-ink-faint"
     >
       {children}
     </h2>
@@ -293,7 +293,7 @@ function Field({
     <div>
       <label
         htmlFor={id}
-        className="mb-1.5 block text-[11px] uppercase tracking-wider text-ink-muted"
+        className="mb-1.5 block text-[12px] uppercase tracking-wider font-medium text-ink-muted"
       >
         {label}
       </label>

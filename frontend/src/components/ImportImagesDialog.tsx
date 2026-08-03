@@ -77,7 +77,7 @@ export function ImportImagesDialog({
         <button
           type="submit"
           disabled={busy || !source.trim()}
-          className="mt-4 w-full bg-accent px-3 py-2 text-[13px] font-medium
+          className="mt-4 w-full bg-accent px-3 py-2 text-[14px] font-medium
             text-on-accent transition-colors hover:bg-accent-hover
             disabled:bg-surface-3 disabled:text-ink-faint"
         >
@@ -86,13 +86,13 @@ export function ImportImagesDialog({
       </form>
 
       {error && (
-        <p className="mt-4 border-l-2 border-status-review bg-surface-2 px-3 py-2 text-[12px]">
+        <p className="mt-4 border-l-2 border-status-review bg-surface-2 px-3 py-2 text-[13px]">
           {error}
         </p>
       )}
 
       {result && (
-        <div className="mt-4 border-t border-line pt-4 text-[12px]">
+        <div className="mt-4 border-t border-line pt-4 text-[13px]">
           <p>
             Imported <span className="font-mono">{result.imported}</span>
             {result.duplicates > 0 && (
@@ -118,7 +118,7 @@ export function ImportImagesDialog({
               {result.skipped.map((entry) => (
                 <li
                   key={entry.path}
-                  className="border-b border-line px-2 py-1.5 font-mono text-[11px]
+                  className="border-b border-line px-2 py-1.5 font-mono text-[12px]
                     last:border-b-0"
                 >
                   <span className="text-ink">{entry.path}</span>
@@ -148,7 +148,7 @@ function Check({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="flex items-center gap-2 text-[12px]">
+      <label htmlFor={id} className="flex items-center gap-2 text-[13px]">
         <input
           id={id}
           type="checkbox"
@@ -159,7 +159,7 @@ function Check({
         {label}
       </label>
       {hint && (
-        <p className="ml-6 mt-0.5 text-[11px] leading-relaxed text-ink-faint">
+        <p className="ml-6 mt-0.5 text-[12px] leading-relaxed text-ink-faint">
           {hint}
         </p>
       )}

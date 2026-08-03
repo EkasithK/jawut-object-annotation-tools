@@ -24,8 +24,8 @@ export function Frame({
     <div className={`relative ${className}`}>
       {label && (
         <span
-          className={`absolute -top-[9px] left-3 z-10 px-1.5 font-mono text-[10px]
-            uppercase tracking-[0.14em] ${
+          className={`absolute -top-[9px] left-3 z-10 px-1.5 font-mono text-[12px]
+            uppercase tracking-[0.14em] font-medium ${
               active ? "text-accent" : "text-ink-faint"
             } bg-surface-0`}
         >

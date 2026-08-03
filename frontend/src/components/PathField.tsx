@@ -58,14 +58,14 @@ export function PathField({
 
   const input =
     size === "md"
-      ? `bg-surface-1 px-3 py-2.5 text-[12px]`
-      : `bg-surface-2 px-2.5 py-2 text-[12px]`;
+      ? `bg-surface-1 px-3 py-2.5 text-[13px]`
+      : `bg-surface-2 px-2.5 py-2 text-[13px]`;
 
   return (
     <div>
       <label
         htmlFor={id}
-        className="mb-1.5 block text-[11px] uppercase tracking-wider text-ink-muted"
+        className="mb-1.5 block text-[12px] uppercase tracking-wider font-medium text-ink-muted"
       >
         {label}
       </label>
@@ -87,7 +87,7 @@ export function PathField({
           <button
             type="button"
             onClick={() => void pick()}
-            className="shrink-0 border border-line-strong px-3 text-[12px]
+            className="shrink-0 border border-line-strong px-3 text-[13px]
               transition-colors hover:border-accent hover:text-accent
               focus-visible:outline focus-visible:outline-2
               focus-visible:outline-offset-2 focus-visible:outline-accent"
@@ -98,10 +98,10 @@ export function PathField({
       </div>
 
       {hint && (
-        <p className="mt-1.5 text-[11px] leading-relaxed text-ink-faint">{hint}</p>
+        <p className="mt-1.5 text-[12px] leading-relaxed text-ink-faint">{hint}</p>
       )}
       {error && (
-        <p className="mt-1.5 text-[11px] leading-relaxed text-status-review">
+        <p className="mt-1.5 text-[12px] leading-relaxed text-status-review">
           {error}
         </p>
       )}

@@ -66,12 +66,12 @@ export function ExportDialog({
     <Dialog open={open} title="Export dataset" onClose={close}>
       {result ? (
         <>
-          <p className="text-[13px] leading-relaxed">
+          <p className="text-[14px] leading-relaxed">
             Wrote <span className="font-mono">{result.images_exported}</span> images
             and <span className="font-mono">{result.boxes_exported}</span> boxes.
           </p>
           {result.empty_labels > 0 && (
-            <p className="mt-1 text-[12px] text-ink-muted">
+            <p className="mt-1 text-[13px] text-ink-muted">
               <span className="font-mono">{result.empty_labels}</span> background
               images exported with an empty label file.
             </p>
@@ -80,21 +80,21 @@ export function ExportDialog({
           <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
             {Object.entries(result.counts_per_split).map(([split, count]) => (
               <div key={split} className="border border-line py-2">
-                <dt className="font-mono text-[10px] uppercase tracking-wider text-ink-faint">
+                <dt className="font-mono text-[12px] uppercase tracking-wider font-medium text-ink-faint">
                   {split}
                 </dt>
-                <dd className="font-mono text-[15px]">{count}</dd>
+                <dd className="font-mono text-[16px]">{count}</dd>
               </div>
             ))}
           </dl>
 
-          <p className="mt-3 break-all font-mono text-[11px] text-ink-faint">
+          <p className="mt-3 break-all font-mono text-[12px] text-ink-faint">
             {result.destination}
           </p>
 
           <button
             onClick={close}
-            className="mt-4 w-full bg-accent px-3 py-2 text-[13px] font-medium
+            className="mt-4 w-full bg-accent px-3 py-2 text-[14px] font-medium
               text-on-accent transition-colors hover:bg-accent-hover"
           >
             Done
@@ -114,7 +114,7 @@ export function ExportDialog({
           />
 
           <fieldset className="mt-4">
-            <legend className="mb-1.5 text-[11px] uppercase tracking-wider text-ink-muted">
+            <legend className="mb-1.5 text-[12px] uppercase tracking-wider font-medium text-ink-muted">
               Layout
             </legend>
             <div className="grid grid-cols-2 gap-2">
@@ -138,11 +138,11 @@ export function ExportDialog({
           {layout === "split" && (
             <div className="mt-4">
               <div className="mb-1.5 flex items-baseline justify-between">
-                <span className="text-[11px] uppercase tracking-wider text-ink-muted">
+                <span className="text-[12px] uppercase tracking-wider font-medium text-ink-muted">
                   Ratios
                 </span>
                 <span
-                  className={`font-mono text-[11px] ${
+                  className={`font-mono text-[12px] ${
                     ratiosValid ? "text-ink-faint" : "text-status-review"
                   }`}
                 >
@@ -154,7 +154,7 @@ export function ExportDialog({
                   <div key={key}>
                     <label
                       htmlFor={`ratio-${key}`}
-                      className="mb-1 block font-mono text-[10px] uppercase text-ink-faint"
+                      className="mb-1 block font-mono text-[12px] uppercase text-ink-faint"
                     >
                       {key}
                     </label>
@@ -171,14 +171,14 @@ export function ExportDialog({
                         })
                       }
                       className="w-full border border-line bg-surface-2 px-2 py-1.5
-                        font-mono text-[12px] focus:border-accent focus:outline-none"
+                        font-mono text-[13px] focus:border-accent focus:outline-none"
                     />
                   </div>
                 ))}
                 <div>
                   <label
                     htmlFor="export-seed"
-                    className="mb-1 block font-mono text-[10px] uppercase text-ink-faint"
+                    className="mb-1 block font-mono text-[12px] uppercase text-ink-faint"
                   >
                     seed
                   </label>
@@ -188,14 +188,14 @@ export function ExportDialog({
                     value={seed}
                     onChange={(e) => setSeed(Number(e.target.value))}
                     className="w-full border border-line bg-surface-2 px-2 py-1.5
-                      font-mono text-[12px] focus:border-accent focus:outline-none"
+                      font-mono text-[13px] focus:border-accent focus:outline-none"
                   />
                 </div>
               </div>
             </div>
           )}
 
-          <label className="mt-4 flex items-center gap-2 text-[12px]">
+          <label className="mt-4 flex items-center gap-2 text-[13px]">
             <input
               type="checkbox"
               checked={includeUnlabeled}
@@ -204,7 +204,7 @@ export function ExportDialog({
             />
             Include images nobody has opened
           </label>
-          <p className="ml-6 mt-0.5 text-[11px] leading-relaxed text-ink-faint">
+          <p className="ml-6 mt-0.5 text-[12px] leading-relaxed text-ink-faint">
             Off by default: exporting them as empty labels would claim they contain
             no objects.
           </p>
@@ -212,7 +212,7 @@ export function ExportDialog({
           <button
             type="submit"
             disabled={busy || !destination.trim() || (layout === "split" && !ratiosValid)}
-            className="mt-4 w-full bg-accent px-3 py-2 text-[13px] font-medium
+            className="mt-4 w-full bg-accent px-3 py-2 text-[14px] font-medium
               text-on-accent transition-colors hover:bg-accent-hover
               disabled:bg-surface-3 disabled:text-ink-faint"
           >
@@ -222,7 +222,7 @@ export function ExportDialog({
       )}
 
       {error && (
-        <p className="mt-4 border-l-2 border-status-review bg-surface-2 px-3 py-2 text-[12px]">
+        <p className="mt-4 border-l-2 border-status-review bg-surface-2 px-3 py-2 text-[13px]">
           {error}
         </p>
       )}
@@ -258,8 +258,8 @@ function LayoutOption({
         onChange={onSelect}
         className="sr-only"
       />
-      <span className="block text-[12px] font-medium">{title}</span>
-      <span className="mt-0.5 block text-[11px] leading-snug text-ink-faint">
+      <span className="block text-[13px] font-medium">{title}</span>
+      <span className="mt-0.5 block text-[12px] leading-snug text-ink-faint">
         {hint}
       </span>
     </label>

@@ -146,18 +146,9 @@ with sync_playwright() as pw:
         page.fill("input[placeholder='Add a class…']", name)
         page.press("input[placeholder='Add a class…']", "Enter")
         page.wait_for_timeout(400)
-    palette = {
-        "Helmet": "#4c8dff",
-        "Helmet_Ngob": "#c77dff",
-        "Ngob": "#4fd1c5",
-        "No_Helmet": "#f2789f",
-    }
-    for cls in api("GET", "/api/v1/classes")["classes"]:
-        api(
-            "PATCH",
-            f"/api/v1/classes/{cls['id']}",
-            json={"color": palette[cls["name"]]},
-        )
+    # Colours are left at the defaults on purpose: the guide should show what a
+    # new project actually looks like, and the default palette is chosen to stay
+    # visible on exactly these photographs.
     page.reload(wait_until="networkidle")
     page.wait_for_timeout(900)
     shot(page, "06-classes")

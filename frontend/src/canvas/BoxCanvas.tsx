@@ -23,7 +23,27 @@ import {
  *  regardless of the surrounding theme. */
 const LABEL_INK = "#14120f";
 
-const HANDLE_SIZE = 8;
+/**
+ * Everything coloured is drawn twice: this underneath, slightly wider, then the
+ * class colour on top.
+ *
+ * A single coloured line disappears wherever the scene behind it happens to be
+ * a similar colour — which on site photographs is constant, and is why boxes
+ * were hard to see no matter which palette was used. A dark outline gives every
+ * box an edge against a bright sky and a bright edge against dark mud, so
+ * visibility stops depending on the background at all.
+ */
+const HALO = "rgba(0, 0, 0, 0.78)";
+const HALO_WIDTH = 2.5;
+
+const STROKE = 3;
+const STROKE_SELECTED = 5;
+
+const LABEL_FONT = "600 13px ui-sans-serif, system-ui, -apple-system, sans-serif";
+const LABEL_HEIGHT = 19;
+const LABEL_PAD_X = 6;
+
+const HANDLE_SIZE = 9;
 const HANDLE_HIT_RADIUS = 7;
 /** Below this, a drag was a click that happened to wobble, not a new box. */
 const MIN_DRAW_PIXELS = 4;
@@ -156,10 +176,18 @@ export function BoxCanvas({
       const selected = index === selectedIndex;
       const color = colorFor(box.class_id);
 
+      const stroke = selected ? STROKE_SELECTED : STROKE;
+
       context.save();
-      if (ghost) context.setLineDash([5, 4]);
+      if (ghost) context.setLineDash([6, 5]);
+      context.lineJoin = "miter";
+
+      context.strokeStyle = HALO;
+      context.lineWidth = stroke + HALO_WIDTH * 2;
+      context.strokeRect(x1, y1, width, height);
+
       context.strokeStyle = color;
-      context.lineWidth = selected ? 2.5 : 1.5;
+      context.lineWidth = stroke;
       context.strokeRect(x1, y1, width, height);
 
       // A translucent wash makes overlapping boxes readable without hiding the
@@ -172,21 +200,36 @@ export function BoxCanvas({
       if (!ghost) {
         const label = classes.find((c) => c.id === box.class_id)?.name ?? "?";
         context.save();
-        context.font =
-          "500 11px ui-sans-serif, system-ui, -apple-system, sans-serif";
-        const textWidth = context.measureText(label).width;
+        context.font = LABEL_FONT;
+        const chipWidth = context.measureText(label).width + LABEL_PAD_X * 2;
+        // The chip sits above the box, or inside it when the box is against the
+        // top edge of the image and there is no room.
+        const chipY = y1 - LABEL_HEIGHT >= 0 ? y1 - LABEL_HEIGHT : y1;
+
+        context.fillStyle = HALO;
+        context.fillRect(
+          x1 - HALO_WIDTH,
+          chipY - HALO_WIDTH,
+          chipWidth + HALO_WIDTH * 2,
+          LABEL_HEIGHT + HALO_WIDTH * 2,
+        );
         context.fillStyle = color;
-        context.fillRect(x1, y1 - 15, textWidth + 10, 15);
+        context.fillRect(x1, chipY, chipWidth, LABEL_HEIGHT);
+
         context.fillStyle = LABEL_INK;
-        context.fillText(label, x1 + 5, y1 - 4);
+        context.textBaseline = "middle";
+        context.fillText(label, x1 + LABEL_PAD_X, chipY + LABEL_HEIGHT / 2 + 0.5);
         context.restore();
       }
 
       if (selected && !ghost) {
         context.save();
         context.fillStyle = "#ffffff";
-        context.strokeStyle = color;
-        context.lineWidth = 1.5;
+        // Dark rather than the class colour: a white square outlined in a pale
+        // class colour vanishes against a bright background exactly when the
+        // user is trying to grab it.
+        context.strokeStyle = HALO;
+        context.lineWidth = 2;
         for (const handle of HANDLES) {
           const [hx, hy] = handlePoint(rect, handle);
           const [px, py] = toCanvas(view, hx * imageWidth, hy * imageHeight);
@@ -412,7 +455,7 @@ export function BoxCanvas({
 
       {!ready && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center">
-          <span className="font-mono text-[11px] text-canvas-ink-muted">
+          <span className="font-mono text-[12px] text-canvas-ink-muted">
             loading image…
           </span>
         </div>
@@ -420,7 +463,7 @@ export function BoxCanvas({
 
       <div
         className="pointer-events-none absolute bottom-3 right-3 font-mono
-          text-[10px] text-canvas-ink-muted"
+          text-[12px] text-canvas-ink-muted"
       >
         {Math.round(view.scale * 100)}%
       </div>

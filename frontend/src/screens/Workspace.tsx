@@ -283,42 +283,42 @@ export function Workspace() {
   return (
     <div className="flex h-full flex-col">
       <header className="flex shrink-0 items-center gap-3 border-b border-line px-3 py-2">
-        <span className="text-[13px] font-medium">{project?.name}</span>
+        <span className="text-[14px] font-medium">{project?.name}</span>
         <span
-          className="min-w-0 flex-1 truncate font-mono text-[11px] text-ink-faint"
+          className="min-w-0 flex-1 truncate font-mono text-[12px] text-ink-faint"
           title={project?.path}
         >
           {project?.path}
         </span>
 
         {saving && (
-          <span className="font-mono text-[10px] text-ink-faint">saving…</span>
+          <span className="font-mono text-[12px] text-ink-faint">saving…</span>
         )}
 
         <button
           onClick={() => setImportOpen(true)}
-          className="border border-line-strong px-2.5 py-1 text-[12px]
+          className="border border-line-strong px-2.5 py-1 text-[13px]
             transition-colors hover:border-accent hover:text-accent"
         >
           Add images
         </button>
         <button
           onClick={() => setLabelsOpen(true)}
-          className="border border-line-strong px-2.5 py-1 text-[12px]
+          className="border border-line-strong px-2.5 py-1 text-[13px]
             transition-colors hover:border-accent hover:text-accent"
         >
           Import labels
         </button>
         <button
           onClick={() => setExportOpen(true)}
-          className="border border-line-strong px-2.5 py-1 text-[12px]
+          className="border border-line-strong px-2.5 py-1 text-[13px]
             transition-colors hover:border-accent hover:text-accent"
         >
           Export
         </button>
         <button
           onClick={() => void closeProject().then(() => setProject(null))}
-          className="text-[12px] text-ink-muted transition-colors hover:text-ink"
+          className="text-[13px] text-ink-muted transition-colors hover:text-ink"
         >
           Close
         </button>
@@ -362,7 +362,7 @@ export function Workspace() {
                 </p>
                 <button
                   onClick={() => setImportOpen(true)}
-                  className="mt-3 bg-accent px-4 py-2 text-[13px] font-medium
+                  className="mt-3 bg-accent px-4 py-2 text-[14px] font-medium
                     text-on-accent transition-colors hover:bg-accent-hover"
                 >
                   Add images
@@ -374,7 +374,7 @@ export function Workspace() {
           {drawMode && (
             <div
               className="pointer-events-none absolute left-3 top-3 bg-accent px-2 py-1
-                font-mono text-[10px] uppercase tracking-wider text-on-accent"
+                font-mono text-[12px] uppercase tracking-wider font-medium text-on-accent"
             >
               Drawing
             </div>
@@ -420,7 +420,7 @@ export function Workspace() {
       <footer
         ref={statusRef}
         className="flex shrink-0 items-center gap-4 border-t border-line px-3 py-1.5
-          font-mono text-[10px] text-ink-faint"
+          font-mono text-[12px] text-ink-faint"
       >
         {detail && (
           <>
@@ -481,7 +481,7 @@ export function Workspace() {
         <div
           role="alert"
           className="absolute bottom-10 left-1/2 flex -translate-x-1/2 items-center
-            gap-3 border border-status-review bg-surface-1 px-4 py-2.5 text-[12px]"
+            gap-3 border border-status-review bg-surface-1 px-4 py-2.5 text-[13px]"
         >
           <span>{error}</span>
           <button
