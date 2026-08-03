@@ -98,3 +98,60 @@ rewrite, which is risky and easy to get wrong. So the traces go where cleanup is
 
 **Rejected.** Keeping tracking files outside the repo (breaks multi-machine work) and cleaning
 commit messages later via rebase (risky, and pointless when it can simply be avoided).
+
+---
+
+## 2026-08-03 — Whole-image annotation saves rather than per-box endpoints
+
+**Decision.** The client sends the complete set of boxes for one image and the server replaces
+them, instead of exposing create/update/delete per box.
+
+**Why.** It frees the client to batch edits without an id-reconciliation protocol, and makes every
+save one atomic transaction, so a rejected edit cannot leave an image half-updated. Images carry a
+handful of boxes, so the payload is trivial.
+
+**Rejected.** Per-box REST endpoints. More conventional, but they turn a drag that moves and
+resizes several boxes into a sequence of calls that can partially fail.
+
+---
+
+## 2026-08-03 — The launch token is injected server-side into index.html
+
+**Decision.** The server rewrites `index.html` to include the per-launch token, rather than the
+desktop shell calling `evaluate_js` after the window opens.
+
+**Why.** `evaluate_js` races the page: React can issue its first request before the injection
+lands, and that request is rejected. Injecting server-side is deterministic.
+
+**Rejected.** `webview.evaluate_js` on window load (racy), and baking a token into the built assets
+(it would then be identical for every launch and every user, which defeats the point).
+
+---
+
+## 2026-08-03 — Runtime data files go through `jawut.resources.package_file`
+
+**Decision.** Every non-Python file read at runtime is resolved through one helper, and listed in
+`datas` in the PyInstaller spec.
+
+**Why.** Only `.py` files go inside a PyInstaller archive; everything else is unpacked to
+`sys._MEIPASS`. Building the bundle locally revealed `schema.sql` was never bundled, so every
+packaged project creation failed while the source tree worked perfectly. A single helper makes the
+requirement visible in one place, and the release smoke test now creates a project so the same
+class of bug cannot reach a user.
+
+**Rejected.** Inlining the schema as a Python string (loses SQL syntax highlighting and diffs), and
+resolving paths ad hoc at each call site (exactly what caused the bug).
+
+---
+
+## 2026-08-03 — Splits are stratified on each image's rarest present class
+
+**Decision.** Export groups images by the rarest class they contain, then splits within each group.
+
+**Why.** A detection image carries several classes at once, so there is no single label to
+stratify on. Keying on the rarest present class stops a scarce class — `Helmet_Ngob` is the whole
+reason this dataset is being relabeled — from landing entirely in one split, which would make its
+validation numbers meaningless.
+
+**Rejected.** Plain random splitting (can strand a rare class), and multi-label stratification
+(materially more complex for a gain that does not show up at this dataset size).

@@ -28,6 +28,9 @@ installer.
 > **Windows SmartScreen** may show "Windows protected your PC" because the application is not code
 > signed. Click **More info** then **Run anyway**.
 
+Relabeling an existing dataset onto a new set of classes? There is a worked runbook for
+exactly that in [docs/HELMET_MIGRATION.md](docs/HELMET_MIGRATION.md).
+
 ## Getting started
 
 1. Launch the app and choose **New Project**, then pick a name and a folder to keep it in.

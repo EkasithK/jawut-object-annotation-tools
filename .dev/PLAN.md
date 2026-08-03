@@ -173,43 +173,43 @@ Keybindings are a v1 requirement, not polish — they are the entire reason CVAT
 - [x] Projects service + router: create, open, close, forget, list recent
 - [x] Welcome screen UI (New / Recent)
 
-### Phase 3 — Labeling
-- [ ] Image import: copy into project or link, Pillow dimensions, sha256 dedupe
-- [ ] `BoxCanvas`: fit / zoom / pan
-- [ ] Draw and resize boxes with edge handles
-- [ ] Class CRUD; delete dialog with usage count and reassign-or-delete
-- [ ] Box class reassignment
-- [ ] Status filter bar
-- [ ] Full keybindings
-- [ ] Undo / redo backed by `edit_log`
+### Phase 3 — Labeling ✅
+- [x] Image import: copy into project or link, Pillow dimensions, sha256 dedupe
+- [x] `BoxCanvas`: fit / zoom / pan
+- [x] Draw and resize boxes with edge handles
+- [x] Class CRUD; delete dialog with usage count and reassign-or-delete
+- [x] Box class reassignment
+- [x] Status filter bar
+- [x] Full keybindings
+- [x] Undo / redo backed by `edit_log`
 
-### Phase 4 — Label import
-- [ ] `data.yaml` parsing and class inference
-- [ ] Per-line validation and quarantine rules
-- [ ] Class-mapping wizard UI
-- [ ] Import report, saveable to txt
+### Phase 4 — Label import ✅
+- [x] `data.yaml` parsing and class inference
+- [x] Per-line validation and quarantine rules
+- [x] Class-mapping wizard UI
+- [x] Import report, saveable to txt
 
-### Phase 5 — Export
-- [ ] Stratified split by rarest present class, seeded
-- [ ] Flat no-split mode
-- [ ] `data.yaml` + `export_manifest.json`
-- [ ] Empty `.txt` for `done` images with zero boxes
-- [ ] Export dialog UI
+### Phase 5 — Export ✅
+- [x] Stratified split by rarest present class, seeded
+- [x] Flat no-split mode
+- [x] `data.yaml` + `export_manifest.json`
+- [x] Empty `.txt` for `done` images with zero boxes
+- [x] Export dialog UI
 
-### Phase 6 — Packaging
-- [ ] `__main__.py`: uvicorn on port 0 + launch token + pywebview window
-- [ ] Native folder pickers
-- [ ] Clean shutdown on window close
-- [ ] `packaging/jawut.spec` (onedir, windowed, icon)
-- [ ] `.github/workflows/release.yml` on `windows-latest`
-- [ ] First end-to-end exe verified on a clean Windows machine
+### Phase 6 — Packaging ✅
+- [x] `__main__.py`: uvicorn on port 0 + launch token + pywebview window
+- [x] Native folder pickers
+- [x] Clean shutdown on window close
+- [x] `packaging/jawut.spec` (onedir, windowed, icon)
+- [x] `.github/workflows/release.yml` on `windows-latest`
+- [x] First end-to-end exe verified on a clean Windows machine
 
-### Phase 7 — Real run
-- [ ] Import the real helmet images + 2-class labels
-- [ ] Map to the 4-class taxonomy, add `Helmet_Ngob` and `Ngob`
-- [ ] Reassign a batch, delete a class with reassignment
-- [ ] Export split, verify `data.yaml` and spot-check `.txt` against the UI
-- [ ] Confirm empty-vs-missing `.txt` survives an import → export round trip
+### Phase 7 — Real run ✅
+- [x] Import the real helmet images + 2-class labels
+- [x] Map to the 4-class taxonomy, add `Helmet_Ngob` and `Ngob`
+- [x] Reassign a batch, delete a class with reassignment
+- [x] Export split, verify `data.yaml` and spot-check `.txt` against the UI
+- [x] Confirm empty-vs-missing `.txt` survives an import → export round trip
 
 ## Verification
 

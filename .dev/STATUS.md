@@ -2,51 +2,47 @@
 
 ## Now
 
-Phases 1 and 2 complete and pushed; CI green. Ready to start Phase 3 — image import and
-the labeling canvas.
+All seven phases complete. The application builds, packages, and does the full round trip:
+create project → import images and existing labels → label → manage classes → export YOLO.
+
+The one thing not yet done is the **real run on the actual 1,340 helmet images**, which cannot
+happen on this machine — the dataset lives on the Windows box (`C:/Users/kuaut/Desktop/helmet_wit/`
+per `../helmet_ngob_reject/Data/data.yaml`). The migration is encoded as an automated test against
+a faithful replica, and `docs/HELMET_MIGRATION.md` is the runbook for doing it for real.
 
 ## Done
 
-- **Planning** — scope, storage model, packaging approach and phases agreed. `PLAN.md` is the
-  spec, `DECISIONS.md` records why each choice was made.
-- **Phase 1 — Skeleton**
-  - `pyproject.toml` (uv, ruff, mypy strict, pytest), `.pre-commit-config.yaml`, `.gitignore`,
-    `.env.example`, sub-project `CLAUDE.md`, `README.md`
-  - `.github/workflows/ci.yml` — backend lint/format/typecheck/test, frontend
-    lint/typecheck/build, security scan (pip-audit on the exported lockfile + trivy)
-  - Private repo `EkasithK/jawut-object-annotation-tools` created and pushed
-- **Phase 2 — Core**
-  - `db/schema.sql` v1: meta, classes, images, annotations, edit_log. `STRICT` tables, CHECK
-    constraints on coordinates and status, cascade from images to annotations, FK block on
-    deleting a class still in use, partial unique index so a deleted class name can be reused.
-  - `db/migrations.py` — `PRAGMA user_version` runner, transactional, refuses a database from a
-    newer build rather than downgrading it.
-  - `config.py` — per-user app data directory (Windows/macOS/Linux), atomic settings write,
-    recent-projects list that survives a corrupt file.
-  - `services/projects.py` — create/open/close, Windows path-name rules enforced on every
-    platform, refuses to scatter project files into a non-empty directory.
-  - `session.py` — the single open project; routers reach it via `require_connection`.
-  - `routers/projects.py` — `GET /api/v1/projects` returns the whole welcome state in one call;
-    create, open, close, forget.
-  - Welcome screen: bounding-box corner brackets and a label chip as the visual grammar, signal
-    orange accent, monospace for paths.
-- 100 tests passing, 96% backend coverage, `ruff` and `mypy --strict` clean, frontend builds.
-- Verified end to end against a running server: create project → directory, `project.db` and
-  `images/` on disk → recorded in recents → SPA served from `src/jawut/static/`.
+- **Phase 1 — Skeleton.** uv/ruff/mypy-strict/pytest, pre-commit, CI (lint, format, typecheck,
+  test, pip-audit + trivy), private repo under `EkasithK`.
+- **Phase 2 — Core.** Schema v1 with `STRICT` tables and CHECK constraints, `user_version`
+  migrations, `%APPDATA%` settings with atomic writes, project create/open, welcome screen.
+- **Phase 3 — Labeling.** Image import (copy or link, sha256 dedupe, per-file skip reasons),
+  `BoxCanvas` with zoom/pan/draw/resize, class CRUD with safe delete, status filters, full
+  keybindings.
+- **Phase 4 — Label import.** Two-step preview then apply with an explicit class mapping.
+  Auto-fixes only the unambiguous (pixel coordinates, rounding overflow); quarantines everything
+  else with file and line. Pose-format lines keep the box and drop keypoints.
+- **Phase 5 — Export.** Stratified split (seeded, on each image's rarest class) and flat mode,
+  `data.yaml` in Ultralytics shape, `export_manifest.json` for reproducibility.
+- **Phase 6 — Packaging.** `__main__.py` on an OS-assigned loopback port with a per-launch token,
+  pywebview window owning the process, PyInstaller `onedir` spec, Windows release workflow.
+- **Phase 7 — Migration.** `tests/integration/test_helmet_migration.py` runs the whole 2→4 class
+  job against a replica containing every awkward case; `docs/HELMET_MIGRATION.md` is the runbook.
+- 276 tests passing, 94% backend coverage, `ruff` and `mypy --strict` clean, frontend builds.
 
 ## Next
 
-Phase 3, in this order:
+Nothing is blocking. In rough order of value:
 
-1. `services/images.py` — folder import, Pillow dimensions, sha256 dedupe, copy-into-project vs
-   link-in-place, natural sort key
-2. Images router: list with status filter, serve image bytes, update status
-3. `services/classes.py` + router — CRUD, and the delete flow that counts usage then reassigns or
-   deletes in one transaction
-4. `BoxCanvas.tsx` — fit/zoom/pan first, then draw and resize with edge handles
-5. Annotations router + optimistic client state
-6. Keybindings and the status filter bar
-7. Undo/redo on `edit_log`
+1. **Run the real migration** on the Windows machine, following `docs/HELMET_MIGRATION.md`.
+   That is the only remaining unknown.
+2. Tag `v0.1.0` to produce the first Windows zip, and try it on a machine that has never had
+   Python installed.
+3. Undo/redo in the UI. The `edit_log` table already records before/after for every save, so the
+   data is there; only the UI and an endpoint are missing.
+4. An icon (`packaging/icon.ico`) — the spec picks it up automatically if present.
+5. Native folder pickers via pywebview, replacing the typed paths in the import and export dialogs.
+   Typed paths work but are the weakest part of the experience for a non-technical user.
 
 ## Open questions / blocked
 
@@ -54,25 +50,31 @@ Phase 3, in this order:
 
 ## Notes for the next session
 
-- Toolchain: `uv` venv resolves to Python 3.11.15, node 24.16. Code targets py311 so the Windows
-  CI build stays compatible.
+- Toolchain: `uv` venv on Python 3.11.15, node 24.16. Code targets py311 so the Windows CI build
+  stays compatible.
 - Dev runs two processes: `uv run uvicorn jawut.app:app --reload --port 8000` and
-  `cd frontend && npm run dev` (Vite proxies `/api`, `/health`, `/ready` to :8000). Set
-  `JAWUT_APP_DATA_DIR` to a scratch path when testing so real settings are not touched.
-- `app.py` registers its error handler on **Starlette's** `HTTPException`, not FastAPI's subclass.
-  Router-level 404s never pass through the subclass, so registering on the subclass silently
-  breaks the response envelope. Do not "simplify" that import.
-- `StaticFiles` is mounted at `/` **after** the routers, and only when `src/jawut/static/` exists.
-  Once client-side routing lands, that mount needs an index.html fallback for unknown paths.
+  `cd frontend && npm run dev`. Or run the real entry point with
+  `uv run python -m jawut --no-window --port 8000`, which prints the launch token —
+  API calls then need `X-Jawut-Token`.
+- Set `JAWUT_APP_DATA_DIR` to a scratch path when testing so real settings are untouched.
+- **Any non-Python file the app reads at runtime needs two things**: resolution through
+  `jawut.resources.package_file`, and an entry in `datas` in `packaging/jawut.spec`. Missing
+  either produces a build that works from source and fails only once packaged. This already bit
+  once — `schema.sql` was absent from the bundle, so every packaged project creation failed while
+  everything passed locally. The release smoke test now creates a project and a class for exactly
+  this reason.
+- The launch token is injected into `index.html` **by the server**, not by `evaluate_js` after the
+  window opens. The latter races the app's first request.
+- `app.py` registers its error handler on **Starlette's** `HTTPException`, not FastAPI's subclass;
+  router-level 404s never pass through the subclass.
+- `StaticFiles` is mounted at `/` after an explicit `/` route, so the token-injecting index wins.
+  Client-side routing would need an index.html fallback for unknown paths.
 - CI gotchas already hit: `aquasecurity/trivy-action` tags are `v`-prefixed, and `pip-audit`
-  cannot audit the installed environment because `jawut` is unpublished — the workflow audits
+  cannot audit the environment because `jawut` is unpublished — the workflow audits
   `uv export --no-emit-project` output instead.
-- Reference code for Phase 3: the old labeler at
-  `../ekasith-phd-thesis/experiments/tools/labeler/` — `static/index.html:262-274` has the
-  image↔canvas view transform (`fitView`, `toC`, `toI`, `nToImg`, `imgToN`) worth porting into
-  `BoxCanvas.tsx` rather than re-deriving. `app.py:81-90` is the backup-original-once pattern the
-  `edit_log` table replaces.
-- Real data for Phase 7: `../helmet_ngob_reject/Data/` (`data.yaml` is 2-class); the 4-class
-  taxonomy and labeling rules are in `../helmet_ngob_reject/docs/ANNOTATION_GUIDELINE.md`.
-- Those old thesis label files are **pose format** (5 box fields + 15 keypoint fields per line).
-  The importer's `>5 fields` branch is what makes them ingestible — keep that test green.
+- Test images must differ by more than a little: JPEG quantization collapses near-identical solid
+  colours into byte-identical files, which the importer correctly treats as duplicates. The
+  `make_image` fixture spaces the channels widely for this reason.
+- PyInstaller can be run locally on Linux to validate the spec end to end. It produces a Linux
+  binary, but it proves the bundle, the hidden imports and the data files are right — which is how
+  the `schema.sql` bug was found before release.
