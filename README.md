@@ -28,8 +28,12 @@ installer.
 > **Windows SmartScreen** may show "Windows protected your PC" because the application is not code
 > signed. Click **More info** then **Run anyway**.
 
-Relabeling an existing dataset onto a new set of classes? There is a worked runbook for
-exactly that in [docs/HELMET_MIGRATION.md](docs/HELMET_MIGRATION.md).
+## Documentation
+
+| | |
+|---|---|
+| **[User Guide](docs/USER_GUIDE.md)** ([PDF](docs/USER_GUIDE.pdf)) | Every step with screenshots, from a blank screen to an exported dataset. Start here. |
+| [Migration runbook](docs/HELMET_MIGRATION.md) | Relabeling an existing dataset onto a new set of classes. |
 
 ## Getting started
 
