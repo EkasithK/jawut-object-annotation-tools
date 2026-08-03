@@ -20,6 +20,7 @@ import argparse
 import os
 import secrets
 import socket
+import subprocess
 import sys
 import threading
 import webbrowser
@@ -41,6 +42,10 @@ IDYES = 6
 #: The alternate data stream Windows attaches to anything downloaded.
 ZONE_STREAM = "Zone.Identifier"
 
+#: CREATE_NO_WINDOW. A windowed build must not flash a console when it shells
+#: out. Ignored on other platforms, where the helper never runs.
+CREATE_NO_WINDOW = 0x08000000
+
 
 def bundle_dir() -> Path | None:
     """Where PyInstaller put our files, or ``None`` when running from source."""
@@ -49,7 +54,20 @@ def bundle_dir() -> Path | None:
     return Path(sys.executable).parent
 
 
-def unblock_bundle() -> int:
+def powershell_path() -> str:
+    """The absolute path to Windows PowerShell.
+
+    Spelled out rather than left to ``PATH``: a bare name would run whatever
+    ``powershell.exe`` happened to come first, which in a user-writable
+    directory is somebody else's code running inside this process's launch.
+    """
+    system_root = os.environ.get("SystemRoot", r"C:\Windows")
+    return os.path.join(
+        system_root, "System32", "WindowsPowerShell", "v1.0", "powershell.exe"
+    )
+
+
+def unblock_bundle(timeout: float = 60.0) -> bool:
     """Strip the "came from the internet" mark from the files we shipped.
 
     Windows tags a downloaded zip, and Explorer's *Extract All* copies that tag
@@ -59,34 +77,49 @@ def unblock_bundle() -> int:
     screen. The user sees a stack trace and an application that will not start,
     with nothing to suggest the cause is a file property rather than a bug.
 
-    Clearing the tag from our own files is exactly what right-click → Properties
-    → Unblock does, one file at a time, and needs no elevation because the user
-    owns them.
+    Delegated to PowerShell's ``Unblock-File`` rather than done in-process,
+    which was tried first and does not work: deleting an alternate data stream
+    by path fails on Windows with "the filename, directory name, or volume
+    label syntax is incorrect", both from :func:`os.remove` and from ``del``.
+    ``Unblock-File`` is the mechanism Windows documents for this, it ships with
+    every supported version, and it needs no elevation because the user owns
+    these files.
 
-    Returns how many files were cleared. Never raises: failing here only risks
-    the window not opening, which the caller already handles.
+    Runs on every frozen launch rather than only when a mark is detected —
+    detecting one means reading the stream that cannot reliably be addressed in
+    the first place. It costs roughly a second, and only for the packaged build.
+
+    Never raises: failing here only risks the window not opening, which the
+    caller already handles.
     """
     root = bundle_dir()
     if root is None or sys.platform != "win32":
-        return 0
+        return False
 
-    cleared = 0
+    # A single quote in the path would end the string literal early; PowerShell
+    # escapes one by doubling it.
+    quoted = str(root).replace("'", "''")
+    script = f"Get-ChildItem -LiteralPath '{quoted}' -Recurse -File | Unblock-File"
+
     try:
-        candidates = list(root.rglob("*"))
-    except OSError:
-        return 0
-
-    for path in candidates:
-        try:
-            if not path.is_file():
-                continue
-            os.remove(f"{path}:{ZONE_STREAM}")
-        except OSError:
-            # No such stream on this file, or it is not ours to change. Both are
-            # ordinary: most files in the bundle are never tagged.
-            continue
-        cleared += 1
-    return cleared
+        completed = subprocess.run(  # noqa: S603  fixed argv, no shell
+            [
+                powershell_path(),
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                script,
+            ],
+            capture_output=True,
+            timeout=timeout,
+            check=False,
+            creationflags=CREATE_NO_WINDOW,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return completed.returncode == 0
 
 
 def message_box(text: str, caption: str = APP_NAME, style: int = 0) -> int:

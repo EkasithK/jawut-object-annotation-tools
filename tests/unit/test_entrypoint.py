@@ -136,7 +136,7 @@ def test_a_token_is_generated_when_none_is_supplied(
 def test_running_from_source_has_no_bundle_to_unblock() -> None:
     """Nothing is frozen during development, so there is nothing to clear."""
     assert entry.bundle_dir() is None
-    assert entry.unblock_bundle() == 0
+    assert entry.unblock_bundle() is False
 
 
 def test_the_bundle_directory_sits_beside_the_executable(
@@ -150,51 +150,89 @@ def test_the_bundle_directory_sits_beside_the_executable(
 def test_unblocking_is_skipped_off_windows(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Alternate data streams are an NTFS feature; elsewhere there is no mark."""
+    """The internet mark is an NTFS alternate data stream; elsewhere there is none."""
     monkeypatch.setattr(entry.sys, "frozen", True, raising=False)
     monkeypatch.setattr(entry.sys, "executable", str(tmp_path / "app.exe"))
     monkeypatch.setattr(entry.sys, "platform", "linux")
-    assert entry.unblock_bundle() == 0
+    assert entry.unblock_bundle() is False
 
 
-def test_unblocking_counts_the_streams_it_removes(
+def _frozen_on_windows(monkeypatch: pytest.MonkeyPatch, root: Path) -> list[list[str]]:
+    monkeypatch.setattr(entry.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(entry.sys, "executable", str(root / "app.exe"))
+    monkeypatch.setattr(entry.sys, "platform", "win32")
+
+    calls: list[list[str]] = []
+
+    class Completed:
+        returncode = 0
+
+    def fake_run(argv: list[str], **kwargs: object) -> Completed:
+        calls.append(argv)
+        return Completed()
+
+    monkeypatch.setattr(entry.subprocess, "run", fake_run)
+    return calls
+
+
+def test_unblocking_shells_out_to_unblock_file(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """The Windows path, with the stream delete stubbed out.
+    """Deleting the stream in-process does not work on Windows; this does."""
+    calls = _frozen_on_windows(monkeypatch, tmp_path)
 
-    Alternate data streams cannot be created on this filesystem, so what is
-    verified is the walk and the counting — that every file is visited, that a
-    file without the mark is not counted, and that one failure does not stop it.
-    """
+    assert entry.unblock_bundle() is True
+
+    argv = calls[0]
+    # An absolute path, not a bare name: a user-writable powershell.exe earlier
+    # on PATH would otherwise run as part of this launch.
+    assert argv[0].endswith("powershell.exe")
+    assert argv[0] != "powershell.exe"
+    assert "Unblock-File" in argv[-1]
+    assert str(tmp_path) in argv[-1]
+    # -NonInteractive matters: a prompt would hang a build with no console.
+    assert "-NonInteractive" in argv
+
+
+def test_a_quote_in_the_path_cannot_break_out_of_the_script(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    odd = tmp_path / "kowz's tools"
+    odd.mkdir()
+    calls = _frozen_on_windows(monkeypatch, odd)
+
+    entry.unblock_bundle()
+
+    assert "kowz''s tools" in calls[0][-1]
+
+
+def test_unblocking_reports_failure_rather_than_raising(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     monkeypatch.setattr(entry.sys, "frozen", True, raising=False)
     monkeypatch.setattr(entry.sys, "executable", str(tmp_path / "app.exe"))
     monkeypatch.setattr(entry.sys, "platform", "win32")
 
-    (tmp_path / "_internal").mkdir()
-    (tmp_path / "app.exe").write_text("x", encoding="utf-8")
-    (tmp_path / "_internal" / "marked.dll").write_text("x", encoding="utf-8")
-    (tmp_path / "_internal" / "clean.dll").write_text("x", encoding="utf-8")
+    def explode(argv: list[str], **kwargs: object) -> None:
+        raise OSError("powershell is not on PATH")
 
-    removed: list[str] = []
-
-    def fake_remove(target: str) -> None:
-        if "clean.dll" in target:
-            raise OSError("no such stream")
-        removed.append(target)
-
-    monkeypatch.setattr(entry.os, "remove", fake_remove)
-
-    assert entry.unblock_bundle() == 2
-    assert all(name.endswith(f":{entry.ZONE_STREAM}") for name in removed)
+    monkeypatch.setattr(entry.subprocess, "run", explode)
+    assert entry.unblock_bundle() is False
 
 
-def test_unblocking_never_raises_on_an_unreadable_bundle(
+def test_a_slow_unblock_is_given_up_on(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
+    """A hung helper must not leave the user staring at nothing forever."""
     monkeypatch.setattr(entry.sys, "frozen", True, raising=False)
-    monkeypatch.setattr(entry.sys, "executable", str(tmp_path / "gone" / "app.exe"))
+    monkeypatch.setattr(entry.sys, "executable", str(tmp_path / "app.exe"))
     monkeypatch.setattr(entry.sys, "platform", "win32")
-    assert entry.unblock_bundle() == 0
+
+    def timeout(argv: list[str], **kwargs: object) -> None:
+        raise entry.subprocess.TimeoutExpired(cmd="powershell", timeout=1)
+
+    monkeypatch.setattr(entry.subprocess, "run", timeout)
+    assert entry.unblock_bundle() is False
 
 
 # ── Falling back to the browser ──────────────────────────────────────────────
