@@ -50,6 +50,10 @@ jobs:
           # the bundle can serve its own frontend before anything is published.
           $exe = "dist/Jawut Object Annotation Tools/Jawut Object Annotation Tools.exe"
           if (-not (Test-Path $exe)) { throw "the executable was not produced" }
+          # The build is windowed and so has no console to print the token to.
+          # Supplying it here is the only way an automated check can learn it.
+          $token = "ci-smoke-token"
+          $env:JAWUT_LAUNCH_TOKEN = $token
           $proc = Start-Process -FilePath $exe -ArgumentList "--no-window","--port","8765" -PassThru
           try {
             $ready = $false
@@ -68,10 +72,9 @@ jobs:
             # Creating a project exercises the bundled schema.sql and sqlite. A
             # health check alone would pass on a build whose data files are
             # missing, and that failure would only surface for the user.
-            if ($page.Content -notmatch '__JAWUT_TOKEN__="([^"]+)"') {
+            if ($page.Content -notmatch [regex]::Escape("__JAWUT_TOKEN__=`"$token`"")) {
               throw "the launch token was not injected into the page"
             }
-            $token = $Matches[1]
             $headers = @{ "X-Jawut-Token" = $token }
             $workspace = Join-Path $env:RUNNER_TEMP "smoke"
 

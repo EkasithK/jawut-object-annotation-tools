@@ -65,3 +65,65 @@ def test_a_missing_pywebview_fails_with_guidance(
 
 def test_version_string_is_exposed() -> None:
     assert __version__
+
+
+def test_missing_streams_are_replaced(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A windowed Windows build starts with stdout and stderr set to None; the
+    first print would otherwise kill the process before it serves anything."""
+    monkeypatch.setattr("sys.stdout", None)
+    monkeypatch.setattr("sys.stderr", None)
+
+    entry.ensure_streams()
+
+    import sys as sys_module
+
+    assert sys_module.stdout is not None
+    assert sys_module.stderr is not None
+    print("this must not raise")
+
+
+def test_existing_streams_are_left_alone(monkeypatch: pytest.MonkeyPatch) -> None:
+    import io
+    import sys as sys_module
+
+    replacement = io.StringIO()
+    monkeypatch.setattr("sys.stdout", replacement)
+
+    entry.ensure_streams()
+
+    assert sys_module.stdout is replacement
+
+
+def test_a_supplied_token_is_used(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A windowed build cannot print its token, so a caller may supply one."""
+    from jawut.app import LAUNCH_TOKEN_ENV
+
+    monkeypatch.setenv(LAUNCH_TOKEN_ENV, "supplied-token")
+    captured: dict[str, str] = {}
+
+    def fake_headless(port: int, token: str) -> int:
+        captured["token"] = token
+        return 0
+
+    monkeypatch.setattr(entry, "run_headless", fake_headless)
+    entry.main(["--no-window", "--port", "9999"])
+
+    assert captured["token"] == "supplied-token"
+
+
+def test_a_token_is_generated_when_none_is_supplied(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from jawut.app import LAUNCH_TOKEN_ENV
+
+    monkeypatch.delenv(LAUNCH_TOKEN_ENV, raising=False)
+    captured: dict[str, str] = {}
+
+    def fake_headless(port: int, token: str) -> int:
+        captured["token"] = token
+        return 0
+
+    monkeypatch.setattr(entry, "run_headless", fake_headless)
+    entry.main(["--no-window"])
+
+    assert len(captured["token"]) > 20

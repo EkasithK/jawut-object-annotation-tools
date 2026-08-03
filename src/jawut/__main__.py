@@ -30,6 +30,20 @@ DEFAULT_WINDOW = (1360, 860)
 MINIMUM_WINDOW = (1024, 640)
 
 
+def ensure_streams() -> None:
+    """Give the process usable output streams even when Windows withholds them.
+
+    A windowed build has no console, so ``sys.stdout`` and ``sys.stderr`` are
+    ``None``. The first ``print`` then raises, and uvicorn's logging setup fails
+    the same way — which kills the application before it ever serves a request.
+    Pointing them at the null device keeps it alive whether or not anyone is
+    watching the output.
+    """
+    for name in ("stdout", "stderr"):
+        if getattr(sys, name, None) is None:
+            setattr(sys, name, open(os.devnull, "w", encoding="utf-8"))  # noqa: SIM115
+
+
 def free_port() -> int:
     """Ask the OS for a free port and release it immediately."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -131,9 +145,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> int:
+    ensure_streams()
     args = parse_args(argv)
     port = args.port or free_port()
-    token = secrets.token_urlsafe(32)
+    # A caller may supply the token — a windowed build has nowhere to print it,
+    # so an automated check could not otherwise learn what it is.
+    token = os.environ.get(LAUNCH_TOKEN_ENV) or secrets.token_urlsafe(32)
 
     if args.no_window:
         return run_headless(port, token)
