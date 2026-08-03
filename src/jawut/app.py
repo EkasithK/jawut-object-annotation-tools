@@ -2,7 +2,9 @@
 
 The server is bound to loopback and lives for exactly as long as the desktop window,
 so there is no auth layer beyond the per-launch token checked in
-:func:`require_launch_token`. See ``CLAUDE.md`` for why that is sufficient here.
+:func:`require_launch_token`. That token is what stops another process on the same
+machine from finding the port and driving the API; nothing off the machine can
+reach it at all.
 """
 
 from __future__ import annotations
