@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+/* Design tokens. Dark, low-chrome, one accent — the canvas is the only place
+   colour is allowed to compete for attention, since class colours live there. */
+@theme {
+  --color-surface-0: #0e1013;
+  --color-surface-1: #16191e;
+  --color-surface-2: #1e222a;
+  --color-surface-3: #272c36;
+
+  --color-line: #2f3540;
+  --color-line-strong: #3d4552;
+
+  --color-ink: #e6e9ee;
+  --color-ink-muted: #9aa3b2;
+  --color-ink-faint: #6b7484;
+
+  --color-accent: #4c8dff;
+  --color-accent-hover: #6ba0ff;
+
+  --color-status-unlabeled: #6b7484;
+  --color-status-progress: #d9a441;
+  --color-status-done: #3fa96a;
+  --color-status-review: #d9564a;
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-surface-0);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+/* The canvas is driven entirely by keyboard and pointer; stray text selection
+   during a drag is never wanted. */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-line-strong);
+}

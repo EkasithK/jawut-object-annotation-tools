@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Built frontend — produced by `npm run build`, never committed
+src/jawut/static/
+
+# Node
+node_modules/
+frontend/dist/
+
+# PyInstaller
+build/
+dist/
+*.spec.bak
+
+# Secrets and local config
+.env
+.env.local
+
+# Project data — never commit datasets or databases
+*.db
+*.db-wal
+*.db-shm
+projects/
+exports/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*:Zone.Identifier
