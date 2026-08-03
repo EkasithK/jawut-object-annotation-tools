@@ -20,6 +20,7 @@ import {
 import { closeProject } from "../api/projects";
 import { BoxCanvas } from "../canvas/BoxCanvas";
 import { DeleteClassDialog } from "../components/DeleteClassDialog";
+import { ExportDialog } from "../components/ExportDialog";
 import { ImportImagesDialog } from "../components/ImportImagesDialog";
 import { ImportLabelsDialog } from "../components/ImportLabelsDialog";
 import { BoxList } from "../panels/BoxList";
@@ -53,6 +54,7 @@ export function Workspace() {
 
   const [importOpen, setImportOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ObjectClass | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -308,6 +310,13 @@ export function Workspace() {
           Import labels
         </button>
         <button
+          onClick={() => setExportOpen(true)}
+          className="border border-line-strong px-2.5 py-1 text-[12px]
+            transition-colors hover:border-accent hover:text-accent"
+        >
+          Export
+        </button>
+        <button
           onClick={() => void closeProject().then(() => setProject(null))}
           className="text-[12px] text-ink-muted transition-colors hover:text-ink"
         >
@@ -443,6 +452,8 @@ export function Workspace() {
           if (detail) await openImage(detail.image.id);
         }}
       />
+
+      <ExportDialog open={exportOpen} onClose={() => setExportOpen(false)} />
 
       <DeleteClassDialog
         target={deleteTarget}

@@ -15,9 +15,10 @@ from pydantic import BaseModel
 
 from jawut import session
 from jawut.models import Envelope
-from jawut.services import importer
+from jawut.services import exporter, importer
 
 router = APIRouter(prefix="/api/v1/labels", tags=["labels"])
+export_router = APIRouter(prefix="/api/v1/export", tags=["export"])
 
 
 class PreviewRequest(BaseModel):
@@ -67,4 +68,25 @@ async def apply(payload: ApplyRequest) -> Envelope[importer.LabelImportResult]:
             status_code=422, detail=f"could not read the folder: {exc}"
         ) from exc
 
+    return Envelope(data=result)
+
+
+@export_router.post("")
+async def run_export(
+    options: exporter.ExportOptions,
+) -> Envelope[exporter.ExportResult]:
+    """Write a YOLO dataset to disk.
+
+    Refuses a non-empty destination rather than merging into it: a half-overwritten
+    dataset is worse than no dataset, and the failure would only surface at
+    training time.
+    """
+    project = session.require_project()
+    conn = session.require_connection()
+    try:
+        result = exporter.export(conn, project.path, options)
+    except exporter.ExporterError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(status_code=422, detail=f"export failed: {exc}") from exc
     return Envelope(data=result)
