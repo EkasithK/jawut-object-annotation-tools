@@ -19,6 +19,9 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from jawut import APP_NAME, __version__
 from jawut.models import Envelope, ErrorDetail, HealthStatus, ReadyStatus
+from jawut.routers.annotations import router as annotations_router
+from jawut.routers.classes import router as classes_router
+from jawut.routers.images import router as images_router
 from jawut.routers.projects import router as projects_router
 from jawut.session import NoProjectOpenError
 
@@ -90,7 +93,14 @@ def create_app() -> FastAPI:
 
         return Envelope(data=ReadyStatus(db=probe()))
 
-    app.include_router(projects_router, dependencies=[Depends(require_launch_token)])
+    guarded = [Depends(require_launch_token)]
+    for api_router in (
+        projects_router,
+        classes_router,
+        images_router,
+        annotations_router,
+    ):
+        app.include_router(api_router, dependencies=guarded)
 
     # Mounted last so it cannot shadow the API routes above.
     if STATIC_DIR.is_dir():
