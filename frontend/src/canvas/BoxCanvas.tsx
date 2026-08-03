@@ -408,7 +408,7 @@ export function BoxCanvas({
 
       {!ready && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center">
-          <span className="font-mono text-[11px] text-ink-faint">
+          <span className="font-mono text-[11px] text-canvas-ink-muted">
             loading image…
           </span>
         </div>
@@ -416,7 +416,7 @@ export function BoxCanvas({
 
       <div
         className="pointer-events-none absolute bottom-3 right-3 font-mono
-          text-[10px] text-ink-faint"
+          text-[10px] text-canvas-ink-muted"
       >
         {Math.round(view.scale * 100)}%
       </div>

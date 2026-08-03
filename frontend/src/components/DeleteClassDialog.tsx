@@ -106,7 +106,7 @@ export function DeleteClassDialog({
                 disabled={busy || !reassignTo}
                 onClick={() => void confirm(reassignTo)}
                 className="flex-1 bg-accent px-3 py-2 text-[13px] font-medium
-                  text-surface-0 transition-colors hover:bg-accent-hover
+                  text-on-accent transition-colors hover:bg-accent-hover
                   disabled:bg-surface-3 disabled:text-ink-faint"
               >
                 Move and delete
@@ -117,7 +117,7 @@ export function DeleteClassDialog({
               onClick={() => void confirm(null)}
               className="flex-1 border border-status-review px-3 py-2 text-[13px]
                 text-status-review transition-colors hover:bg-status-review
-                hover:text-surface-0 disabled:opacity-50"
+                hover:text-on-accent disabled:opacity-50"
             >
               Delete {usage.annotations} {usage.annotations === 1 ? "box" : "boxes"}
             </button>
@@ -132,7 +132,7 @@ export function DeleteClassDialog({
             disabled={busy}
             onClick={() => void confirm(null)}
             className="mt-5 w-full bg-accent px-3 py-2 text-[13px] font-medium
-              text-surface-0 transition-colors hover:bg-accent-hover
+              text-on-accent transition-colors hover:bg-accent-hover
               disabled:opacity-50"
           >
             Delete class

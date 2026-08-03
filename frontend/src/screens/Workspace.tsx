@@ -336,7 +336,9 @@ export function Workspace() {
           />
         </aside>
 
-        <main className="relative min-w-0 flex-1 bg-surface-0">
+        {/* Dark on purpose: photos and the coloured boxes over them read best
+            against it, and it is the only dark surface in the application. */}
+        <main className="relative min-w-0 flex-1 bg-canvas">
           {detail ? (
             <BoxCanvas
               imageUrl={imageFileUrl(detail.image.id)}
@@ -355,11 +357,13 @@ export function Workspace() {
           ) : (
             <div className="grid h-full place-items-center px-6 text-center">
               <div>
-                <p className="text-ink-muted">No images in this project yet.</p>
+                <p className="text-canvas-ink-muted">
+                  No images in this project yet.
+                </p>
                 <button
                   onClick={() => setImportOpen(true)}
                   className="mt-3 bg-accent px-4 py-2 text-[13px] font-medium
-                    text-surface-0 transition-colors hover:bg-accent-hover"
+                    text-on-accent transition-colors hover:bg-accent-hover"
                 >
                   Add images
                 </button>
@@ -370,7 +374,7 @@ export function Workspace() {
           {drawMode && (
             <div
               className="pointer-events-none absolute left-3 top-3 bg-accent px-2 py-1
-                font-mono text-[10px] uppercase tracking-wider text-surface-0"
+                font-mono text-[10px] uppercase tracking-wider text-on-accent"
             >
               Drawing
             </div>
