@@ -9,6 +9,8 @@ import {
 } from "../api/projects";
 import { ApiError } from "../api/client";
 import { Frame } from "../components/Frame";
+import { OpenDatasetDialog } from "../components/OpenDatasetDialog";
+import { PathField } from "../components/PathField";
 import { useAppStore } from "../store";
 
 function relativeDay(iso: string): string {
@@ -30,6 +32,8 @@ export function Welcome() {
 
   const [name, setName] = useState("");
   const [parentDir, setParentDir] = useState("");
+  const [openPath, setOpenPath] = useState("");
+  const [datasetOpen, setDatasetOpen] = useState(false);
   const [recent, setRecent] = useState<RecentEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -107,19 +111,19 @@ export function Welcome() {
               placeholder="Helmet relabel"
               autoFocus
             />
-            <Field
+            <PathField
               id="project-location"
               label="Location"
               value={parentDir}
               onChange={setParentDir}
-              mono
+              size="md"
             />
 
             <button
               type="submit"
               disabled={busy || !name.trim() || !parentDir.trim()}
               className="mt-1 w-full bg-accent px-4 py-2.5 text-sm font-medium
-                text-surface-0 transition-colors hover:bg-accent-hover
+                text-on-accent transition-colors hover:bg-accent-hover
                 focus-visible:outline focus-visible:outline-2
                 focus-visible:outline-offset-2 focus-visible:outline-accent
                 disabled:cursor-not-allowed disabled:bg-surface-3
@@ -134,6 +138,60 @@ export function Welcome() {
             {parentDir && !parentDir.endsWith("/") ? "/" : ""}
             {name.trim() || "<name>"}
           </p>
+        </section>
+
+        {/* The route in for anyone who already has a labeled or half-labeled
+            dataset, which is most people who arrive with work to finish. */}
+        <section className="mb-12">
+          <SectionLabel>Already have a dataset?</SectionLabel>
+
+          <button
+            onClick={() => setDatasetOpen(true)}
+            className="mt-4 w-full border border-line-strong px-4 py-3 text-left
+              transition-colors hover:border-accent
+              focus-visible:outline focus-visible:outline-2
+              focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            <span className="block text-sm font-medium">
+              Open existing dataset…
+            </span>
+            <span className="mt-0.5 block text-[11px] leading-relaxed text-ink-faint">
+              Browse to a folder of images. Labels, class names and folder layout
+              are detected for you.
+            </span>
+          </button>
+        </section>
+
+        {/* Without this, a project that is not in the recent list — a fresh
+            machine, a cleared list, a folder someone was handed — cannot be
+            reached at all. */}
+        <section className="mb-12">
+          <SectionLabel>Open a project</SectionLabel>
+
+          <div className="mt-4">
+            <PathField
+              id="open-path"
+              label="Project folder"
+              value={openPath}
+              onChange={setOpenPath}
+              placeholder="C:\Users\you\Documents\jawut\Helmet relabel"
+              size="md"
+              hint="The folder holding project.db."
+            />
+          </div>
+
+          <button
+            onClick={() => void handleOpen(openPath.trim())}
+            disabled={busy || !openPath.trim()}
+            className="mt-3 w-full border border-line-strong px-4 py-2.5 text-sm
+              transition-colors hover:border-accent hover:text-accent
+              focus-visible:outline focus-visible:outline-2
+              focus-visible:outline-offset-2 focus-visible:outline-accent
+              disabled:cursor-not-allowed disabled:border-line
+              disabled:text-ink-faint disabled:hover:text-ink-faint"
+          >
+            Open project
+          </button>
         </section>
 
         {recent.length > 0 && (
@@ -195,6 +253,13 @@ export function Welcome() {
           </p>
         )}
       </div>
+
+      <OpenDatasetDialog
+        open={datasetOpen}
+        defaultParentDir={parentDir}
+        onClose={() => setDatasetOpen(false)}
+        onOpened={setProject}
+      />
     </div>
   );
 }
@@ -215,7 +280,6 @@ function Field({
   value,
   onChange,
   placeholder,
-  mono = false,
   autoFocus = false,
 }: {
   id: string;
@@ -223,7 +287,6 @@ function Field({
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  mono?: boolean;
   autoFocus?: boolean;
 }) {
   return (
@@ -241,9 +304,9 @@ function Field({
         placeholder={placeholder}
         autoFocus={autoFocus}
         spellCheck={false}
-        className={`w-full border border-line bg-surface-1 px-3 py-2.5 text-ink
+        className="w-full border border-line bg-surface-1 px-3 py-2.5 text-ink
           transition-colors placeholder:text-ink-faint hover:border-line-strong
-          focus:border-accent focus:outline-none ${mono ? "font-mono text-[12px]" : ""}`}
+          focus:border-accent focus:outline-none"
       />
     </div>
   );

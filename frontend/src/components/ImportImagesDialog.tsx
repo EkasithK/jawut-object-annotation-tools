@@ -3,6 +3,7 @@ import { useState } from "react";
 import { importImages, type ImportResult } from "../api/labeling";
 import { ApiError } from "../api/client";
 import { Dialog } from "./Dialog";
+import { PathField } from "./PathField";
 
 export function ImportImagesDialog({
   open,
@@ -48,22 +49,13 @@ export function ImportImagesDialog({
   return (
     <Dialog open={open} title="Add images" onClose={close}>
       <form onSubmit={(e) => void submit(e)}>
-        <label
-          htmlFor="import-source"
-          className="mb-1.5 block text-[11px] uppercase tracking-wider text-ink-muted"
-        >
-          Folder
-        </label>
-        <input
+        <PathField
           id="import-source"
+          label="Folder"
           value={source}
-          onChange={(e) => setSource(e.target.value)}
+          onChange={setSource}
           placeholder="C:\datasets\helmet\images"
-          spellCheck={false}
           autoFocus
-          className="w-full border border-line bg-surface-2 px-2.5 py-2 font-mono
-            text-[12px] placeholder:text-ink-faint focus:border-accent
-            focus:outline-none"
         />
 
         <div className="mt-3 space-y-2">
@@ -86,7 +78,7 @@ export function ImportImagesDialog({
           type="submit"
           disabled={busy || !source.trim()}
           className="mt-4 w-full bg-accent px-3 py-2 text-[13px] font-medium
-            text-surface-0 transition-colors hover:bg-accent-hover
+            text-on-accent transition-colors hover:bg-accent-hover
             disabled:bg-surface-3 disabled:text-ink-faint"
         >
           {busy ? "Importing…" : "Import"}

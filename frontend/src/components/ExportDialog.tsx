@@ -7,6 +7,7 @@ import {
   type ExportResult,
 } from "../api/export";
 import { Dialog } from "./Dialog";
+import { PathField } from "./PathField";
 
 const DEFAULTS = { train: 70, val: 15, test: 15 };
 
@@ -94,33 +95,23 @@ export function ExportDialog({
           <button
             onClick={close}
             className="mt-4 w-full bg-accent px-3 py-2 text-[13px] font-medium
-              text-surface-0 transition-colors hover:bg-accent-hover"
+              text-on-accent transition-colors hover:bg-accent-hover"
           >
             Done
           </button>
         </>
       ) : (
         <form onSubmit={(e) => void submit(e)}>
-          <label
-            htmlFor="export-destination"
-            className="mb-1.5 block text-[11px] uppercase tracking-wider text-ink-muted"
-          >
-            Destination folder
-          </label>
-          <input
+          <PathField
             id="export-destination"
+            label="Destination folder"
             value={destination}
-            onChange={(e) => setDestination(e.target.value)}
+            onChange={setDestination}
             placeholder="C:\datasets\helmet_v2"
-            spellCheck={false}
+            hint="Must be empty or not exist yet. Browse to the parent, then add a
+              new folder name to the end."
             autoFocus
-            className="w-full border border-line bg-surface-2 px-2.5 py-2 font-mono
-              text-[12px] placeholder:text-ink-faint focus:border-accent
-              focus:outline-none"
           />
-          <p className="mt-1 text-[11px] text-ink-faint">
-            Must be empty or not exist yet.
-          </p>
 
           <fieldset className="mt-4">
             <legend className="mb-1.5 text-[11px] uppercase tracking-wider text-ink-muted">
@@ -222,7 +213,7 @@ export function ExportDialog({
             type="submit"
             disabled={busy || !destination.trim() || (layout === "split" && !ratiosValid)}
             className="mt-4 w-full bg-accent px-3 py-2 text-[13px] font-medium
-              text-surface-0 transition-colors hover:bg-accent-hover
+              text-on-accent transition-colors hover:bg-accent-hover
               disabled:bg-surface-3 disabled:text-ink-faint"
           >
             {busy ? "Exporting…" : "Export"}

@@ -24,10 +24,12 @@ from jawut.models import Envelope, ErrorDetail, HealthStatus, ReadyStatus
 from jawut.resources import package_file
 from jawut.routers.annotations import router as annotations_router
 from jawut.routers.classes import router as classes_router
+from jawut.routers.datasets import router as datasets_router
 from jawut.routers.images import router as images_router
 from jawut.routers.io import export_router
 from jawut.routers.io import router as io_router
 from jawut.routers.projects import router as projects_router
+from jawut.routers.system import router as system_router
 from jawut.session import NoProjectOpenError
 
 LAUNCH_TOKEN_ENV = "JAWUT_LAUNCH_TOKEN"  # noqa: S105  variable name, not a secret
@@ -131,6 +133,8 @@ def create_app() -> FastAPI:
         annotations_router,
         io_router,
         export_router,
+        system_router,
+        datasets_router,
     ):
         app.include_router(api_router, dependencies=guarded)
 

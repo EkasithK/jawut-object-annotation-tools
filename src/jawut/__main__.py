@@ -23,7 +23,7 @@ import threading
 
 import uvicorn
 
-from jawut import APP_NAME, __version__
+from jawut import APP_NAME, __version__, desktop
 from jawut.app import LAUNCH_TOKEN_ENV
 
 DEFAULT_WINDOW = (1360, 860)
@@ -95,17 +95,21 @@ def run_windowed(port: int, token: str) -> int:
 
     # The token reaches the page through the server, which injects it into
     # index.html. Doing it here instead would race the app's first request.
-    webview.create_window(
+    window = webview.create_window(
         APP_NAME,
         f"http://127.0.0.1:{port}/",
         width=DEFAULT_WINDOW[0],
         height=DEFAULT_WINDOW[1],
         min_size=MINIMUM_WINDOW,
-        background_color="#0e1013",
+        background_color="#f7f3ea",
         text_select=False,
     )
+    # Native Browse buttons need this handle; without it the API reports that
+    # dialogs are unavailable and the frontend leaves its typed field in place.
+    desktop.set_window(window)
     webview.start(private_mode=False)
 
+    desktop.set_window(None)
     server.should_exit = True
     return 0
 
