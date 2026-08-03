@@ -45,9 +45,26 @@ What you can check for yourself, if you want to:
 - The whole source is in this repository, and every release is built from it
   automatically by GitHub Actions rather than uploaded from someone's laptop.
 
-If your workplace blocks it entirely, that is usually Windows marking the
-downloaded file. Right-click the zip → **Properties** → tick **Unblock** → **OK**,
-then extract it again.
+### If it starts and then disappears with no window
+
+Windows has blocked the files. Extracting a downloaded zip with Explorer's
+**Extract All** stamps every file inside as "came from the internet", and Windows
+then refuses to load some of them — so the application quits before anything
+appears.
+
+The application clears that mark from its own files each time it starts, so you
+should never see this. If you do:
+
+1. Right-click **the folder you extracted** (not the exe)
+2. **Properties** → tick **Unblock** → **OK**
+3. Start it again
+
+Extracting with 7-Zip rather than Explorer avoids the problem altogether.
+
+If the window still will not open, the application offers to run in your web
+browser instead of failing. Everything works there except the **Browse…**
+buttons — no web page is permitted to open a Windows folder picker, so you type
+or paste folder paths in that mode.
 
 ---
 

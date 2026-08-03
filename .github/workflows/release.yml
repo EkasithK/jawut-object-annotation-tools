@@ -50,6 +50,15 @@ jobs:
           # the bundle can serve its own frontend before anything is published.
           $exe = "dist/Jawut Object Annotation Tools/Jawut Object Annotation Tools.exe"
           if (-not (Test-Path $exe)) { throw "the executable was not produced" }
+
+          # pywebview opens the window through pythonnet on Windows, and this
+          # smoke test runs --no-window, so nothing below would notice the .NET
+          # assembly missing from the bundle. Users would: the window simply
+          # never appears. Check it is there.
+          $runtime = "dist/Jawut Object Annotation Tools/_internal/pythonnet/runtime/Python.Runtime.dll"
+          if (-not (Test-Path $runtime)) {
+            throw "Python.Runtime.dll is not in the bundle — the window cannot open"
+          }
           # The build is windowed and so has no console to print the token to.
           # Supplying it here is the only way an automated check can learn it.
           $token = "ci-smoke-token"
@@ -167,9 +176,19 @@ jobs:
             - This zip was built and smoke-tested by GitHub Actions from the
               tagged source, not uploaded from anyone's laptop.
 
-            If it will not start at all, Windows has flagged the download:
-            right-click the zip → **Properties** → tick **Unblock** → **OK**,
-            then extract again.
+            ## If it starts and then vanishes with no window
+
+            Windows has blocked the files. Extracting with Explorer's
+            **Extract All** stamps everything inside as "came from the
+            internet", and Windows then refuses to load some of it.
+
+            The app clears that mark from its own files at startup, so you
+            should not see this. If you do: right-click **the folder you
+            extracted** → **Properties** → tick **Unblock** → **OK**. Extracting
+            with 7-Zip instead avoids it entirely.
+
+            If the window still cannot open, the app offers to run in your
+            browser rather than failing.
 
             ## Documentation
 

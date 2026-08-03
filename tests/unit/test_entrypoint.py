@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import socket
+from pathlib import Path
 
 import pytest
 
@@ -127,3 +128,128 @@ def test_a_token_is_generated_when_none_is_supplied(
     entry.main(["--no-window"])
 
     assert len(captured["token"]) > 20
+
+
+# ── Unblocking the bundle ────────────────────────────────────────────────────
+
+
+def test_running_from_source_has_no_bundle_to_unblock() -> None:
+    """Nothing is frozen during development, so there is nothing to clear."""
+    assert entry.bundle_dir() is None
+    assert entry.unblock_bundle() == 0
+
+
+def test_the_bundle_directory_sits_beside_the_executable(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(entry.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(entry.sys, "executable", str(tmp_path / "app.exe"))
+    assert entry.bundle_dir() == tmp_path
+
+
+def test_unblocking_is_skipped_off_windows(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Alternate data streams are an NTFS feature; elsewhere there is no mark."""
+    monkeypatch.setattr(entry.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(entry.sys, "executable", str(tmp_path / "app.exe"))
+    monkeypatch.setattr(entry.sys, "platform", "linux")
+    assert entry.unblock_bundle() == 0
+
+
+def test_unblocking_counts_the_streams_it_removes(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The Windows path, with the stream delete stubbed out.
+
+    Alternate data streams cannot be created on this filesystem, so what is
+    verified is the walk and the counting — that every file is visited, that a
+    file without the mark is not counted, and that one failure does not stop it.
+    """
+    monkeypatch.setattr(entry.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(entry.sys, "executable", str(tmp_path / "app.exe"))
+    monkeypatch.setattr(entry.sys, "platform", "win32")
+
+    (tmp_path / "_internal").mkdir()
+    (tmp_path / "app.exe").write_text("x", encoding="utf-8")
+    (tmp_path / "_internal" / "marked.dll").write_text("x", encoding="utf-8")
+    (tmp_path / "_internal" / "clean.dll").write_text("x", encoding="utf-8")
+
+    removed: list[str] = []
+
+    def fake_remove(target: str) -> None:
+        if "clean.dll" in target:
+            raise OSError("no such stream")
+        removed.append(target)
+
+    monkeypatch.setattr(entry.os, "remove", fake_remove)
+
+    assert entry.unblock_bundle() == 2
+    assert all(name.endswith(f":{entry.ZONE_STREAM}") for name in removed)
+
+
+def test_unblocking_never_raises_on_an_unreadable_bundle(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(entry.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(entry.sys, "executable", str(tmp_path / "gone" / "app.exe"))
+    monkeypatch.setattr(entry.sys, "platform", "win32")
+    assert entry.unblock_bundle() == 0
+
+
+# ── Falling back to the browser ──────────────────────────────────────────────
+
+
+class FakeServer:
+    should_exit = False
+
+
+def test_a_failed_window_offers_the_browser(monkeypatch: pytest.MonkeyPatch) -> None:
+    shown: list[str] = []
+    opened: list[str] = []
+
+    monkeypatch.setattr(
+        entry, "message_box", lambda text, **_: (shown.append(text), entry.IDYES)[1]
+    )
+    monkeypatch.setattr(entry.webbrowser, "open", lambda url: opened.append(url))
+
+    server = FakeServer()
+    code = entry.offer_browser_fallback(
+        server,  # type: ignore[arg-type]
+        "http://127.0.0.1:9/",
+        RuntimeError("Failed to resolve Python.Runtime.Loader.Initialize"),
+    )
+
+    assert code == 0
+    assert opened == ["http://127.0.0.1:9/"]
+    assert server.should_exit is True
+    # The first dialog has to name the real cause, or nobody can act on it.
+    assert "Unblock" in shown[0]
+    assert "Python.Runtime.Loader.Initialize" in shown[0]
+
+
+def test_declining_the_browser_stops_the_server(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(entry, "message_box", lambda text, **_: 7)  # IDNO
+    opened: list[str] = []
+    monkeypatch.setattr(entry.webbrowser, "open", lambda url: opened.append(url))
+
+    server = FakeServer()
+    code = entry.offer_browser_fallback(
+        server,  # type: ignore[arg-type]
+        "http://127.0.0.1:9/",
+        RuntimeError("nope"),
+    )
+
+    assert code == 1
+    assert opened == []
+    assert server.should_exit is True
+
+
+def test_message_box_falls_back_to_stderr_off_windows(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(entry.sys, "platform", "linux")
+    assert entry.message_box("something broke", "Caption") == 0
+    assert "something broke" in capsys.readouterr().err

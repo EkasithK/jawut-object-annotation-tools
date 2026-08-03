@@ -78,8 +78,24 @@ If you would rather verify than trust:
   clean Windows runner before it is published.
 - The whole source is here to read.
 
-If it will not start at all, Windows has probably flagged the downloaded file: right-click the zip
-→ **Properties** → tick **Unblock** → **OK**, then extract it again.
+### If it will not start at all
+
+Windows has flagged the downloaded files. Extracting a downloaded zip with Explorer's **Extract
+All** copies the "came from the internet" mark onto every file inside, and Windows then refuses to
+load some of them — so the application starts and immediately dies with no window.
+
+The app clears that mark from its own files at startup, so this should not happen. If it does:
+
+- Right-click the **folder you extracted** → **Properties** → tick **Unblock** → **OK**
+- Or, in PowerShell:
+  ```powershell
+  Get-ChildItem "path\to\Jawut-Object-Annotation-Tools-...-windows" -Recurse | Unblock-File
+  ```
+- Extracting with 7-Zip instead of Explorer avoids it entirely.
+
+If the window still cannot open, the app offers to run in your browser instead rather than
+failing — everything works there except the **Browse…** buttons, which no web page is allowed to
+provide.
 
 ## Documentation
 

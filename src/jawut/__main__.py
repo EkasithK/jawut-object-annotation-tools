@@ -10,6 +10,8 @@ Three details matter for the packaged application:
   page. Without it another local process could drive the API.
 * **The window owns the process.** Closing it shuts the server down, rather than
   leaving a stray process holding the project database open.
+* **The bundle unblocks itself.** See :func:`unblock_bundle` — without it a build
+  extracted from a downloaded zip cannot open its own window at all.
 """
 
 from __future__ import annotations
@@ -20,6 +22,8 @@ import secrets
 import socket
 import sys
 import threading
+import webbrowser
+from pathlib import Path
 
 import uvicorn
 
@@ -28,6 +32,75 @@ from jawut.app import LAUNCH_TOKEN_ENV
 
 DEFAULT_WINDOW = (1360, 860)
 MINIMUM_WINDOW = (1024, 640)
+
+#: user32 MessageBox flags, repeated so this imports on every platform.
+MB_YESNO = 0x04
+MB_ICONWARNING = 0x30
+IDYES = 6
+
+#: The alternate data stream Windows attaches to anything downloaded.
+ZONE_STREAM = "Zone.Identifier"
+
+
+def bundle_dir() -> Path | None:
+    """Where PyInstaller put our files, or ``None`` when running from source."""
+    if not getattr(sys, "frozen", False):
+        return None
+    return Path(sys.executable).parent
+
+
+def unblock_bundle() -> int:
+    """Strip the "came from the internet" mark from the files we shipped.
+
+    Windows tags a downloaded zip, and Explorer's *Extract All* copies that tag
+    onto every file it extracts. .NET Framework then refuses to load
+    ``Python.Runtime.dll`` out of an internet-zone file, and pywebview — which
+    needs it to open the window on Windows — dies before anything reaches the
+    screen. The user sees a stack trace and an application that will not start,
+    with nothing to suggest the cause is a file property rather than a bug.
+
+    Clearing the tag from our own files is exactly what right-click → Properties
+    → Unblock does, one file at a time, and needs no elevation because the user
+    owns them.
+
+    Returns how many files were cleared. Never raises: failing here only risks
+    the window not opening, which the caller already handles.
+    """
+    root = bundle_dir()
+    if root is None or sys.platform != "win32":
+        return 0
+
+    cleared = 0
+    try:
+        candidates = list(root.rglob("*"))
+    except OSError:
+        return 0
+
+    for path in candidates:
+        try:
+            if not path.is_file():
+                continue
+            os.remove(f"{path}:{ZONE_STREAM}")
+        except OSError:
+            # No such stream on this file, or it is not ours to change. Both are
+            # ordinary: most files in the bundle are never tagged.
+            continue
+        cleared += 1
+    return cleared
+
+
+def message_box(text: str, caption: str = APP_NAME, style: int = 0) -> int:
+    """A native dialog drawn by user32 — no .NET, and no window of our own.
+
+    Deliberately not pywebview: this is what reports that pywebview failed.
+    """
+    if sys.platform != "win32":
+        print(f"{caption}: {text}", file=sys.stderr)
+        return 0
+
+    import ctypes
+
+    return int(ctypes.windll.user32.MessageBoxW(None, text, caption, style))
 
 
 def ensure_streams() -> None:
@@ -80,6 +153,10 @@ def _serve(port: int, token: str) -> Server:
 
 def run_windowed(port: int, token: str) -> int:
     """Open the native window. Returns the process exit code."""
+    # Before importing pywebview, not after: importing it is what loads the .NET
+    # assembly that a blocked file makes unloadable.
+    unblock_bundle()
+
     try:
         import webview
     except ImportError:
@@ -92,24 +169,64 @@ def run_windowed(port: int, token: str) -> int:
         return 1
 
     server = _serve(port, token)
+    url = f"http://127.0.0.1:{port}/"
 
-    # The token reaches the page through the server, which injects it into
-    # index.html. Doing it here instead would race the app's first request.
-    window = webview.create_window(
-        APP_NAME,
-        f"http://127.0.0.1:{port}/",
-        width=DEFAULT_WINDOW[0],
-        height=DEFAULT_WINDOW[1],
-        min_size=MINIMUM_WINDOW,
-        background_color="#f7f3ea",
-        text_select=False,
-    )
-    # Native Browse buttons need this handle; without it the API reports that
-    # dialogs are unavailable and the frontend leaves its typed field in place.
-    desktop.set_window(window)
-    webview.start(private_mode=False)
+    try:
+        # The token reaches the page through the server, which injects it into
+        # index.html. Doing it here instead would race the app's first request.
+        window = webview.create_window(
+            APP_NAME,
+            url,
+            width=DEFAULT_WINDOW[0],
+            height=DEFAULT_WINDOW[1],
+            min_size=MINIMUM_WINDOW,
+            background_color="#f7f3ea",
+            text_select=False,
+        )
+        # Native Browse buttons need this handle; without it the API reports that
+        # dialogs are unavailable and the frontend leaves its typed field in place.
+        desktop.set_window(window)
+        webview.start(private_mode=False)
+    except Exception as exc:  # noqa: BLE001  any GUI failure must stay recoverable
+        desktop.set_window(None)
+        return offer_browser_fallback(server, url, exc)
 
     desktop.set_window(None)
+    server.should_exit = True
+    return 0
+
+
+def offer_browser_fallback(server: Server, url: str, exc: Exception) -> int:
+    """Explain why the window did not open, and offer the browser instead.
+
+    A windowed build has no console, so an unhandled exception here is invisible
+    — the application simply fails to appear. Anything that stops the GUI
+    toolkit loading still leaves a perfectly good server running, so the work is
+    reachable either way rather than lost.
+    """
+    answer = message_box(
+        f"{APP_NAME} could not open its own window.\n\n"
+        f"{type(exc).__name__}: {exc}\n\n"
+        "This is nearly always Windows blocking the files because they came out "
+        "of a downloaded zip. To fix it for good: close this, right-click the "
+        "folder you extracted, choose Properties, tick Unblock, click OK, and "
+        "start it again.\n\n"
+        "Open it in your web browser instead for now?",
+        style=MB_YESNO | MB_ICONWARNING,
+    )
+    if answer != IDYES:
+        server.should_exit = True
+        return 1
+
+    webbrowser.open(url)
+    # A modal is the only close button the user has left, since the window that
+    # would normally own the process never opened.
+    message_box(
+        f"{APP_NAME} is running at {url} in your browser.\n\n"
+        "Leave this message open while you work, and click OK to stop it.\n\n"
+        "The Browse buttons cannot appear in a browser tab — type or paste "
+        "folder paths instead.",
+    )
     server.should_exit = True
     return 0
 
