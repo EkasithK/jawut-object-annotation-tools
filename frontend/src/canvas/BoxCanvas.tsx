@@ -19,6 +19,10 @@ import {
   zoomAt,
 } from "./geometry";
 
+/** Label text sits on the class colour, which is always bright, so it is dark
+ *  regardless of the surrounding theme. */
+const LABEL_INK = "#14120f";
+
 const HANDLE_SIZE = 8;
 const HANDLE_HIT_RADIUS = 7;
 /** Below this, a drag was a click that happened to wobble, not a new box. */
@@ -173,7 +177,7 @@ export function BoxCanvas({
         const textWidth = context.measureText(label).width;
         context.fillStyle = color;
         context.fillRect(x1, y1 - 15, textWidth + 10, 15);
-        context.fillStyle = "#0e1013";
+        context.fillStyle = LABEL_INK;
         context.fillText(label, x1 + 5, y1 - 4);
         context.restore();
       }
