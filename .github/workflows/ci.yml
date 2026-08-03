@@ -69,13 +69,15 @@ jobs:
         with:
           enable-cache: true
 
+      # Audits the locked dependency set rather than the installed environment,
+      # since `jawut` itself is unpublished and pip-audit cannot resolve it.
       - name: Audit Python dependencies
         run: |
-          uv sync --frozen
-          uv run --with pip-audit pip-audit --strict
+          uv export --frozen --no-emit-project --format requirements-txt > requirements.audit.txt
+          uv run --with pip-audit pip-audit --strict --requirement requirements.audit.txt
 
       - name: Scan filesystem for vulnerabilities
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
