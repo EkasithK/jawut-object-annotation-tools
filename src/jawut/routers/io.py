@@ -23,6 +23,9 @@ export_router = APIRouter(prefix="/api/v1/export", tags=["export"])
 
 class PreviewRequest(BaseModel):
     labels_dir: Path
+    #: Where to read class names from. Unset falls back to looking beside the
+    #: labels folder and one level up.
+    data_yaml: Path | None = None
 
 
 class ApplyRequest(BaseModel):
@@ -37,7 +40,9 @@ class ApplyRequest(BaseModel):
 async def preview(payload: PreviewRequest) -> Envelope[importer.LabelPreview]:
     conn = session.require_connection()
     try:
-        return Envelope(data=importer.preview(conn, payload.labels_dir))
+        return Envelope(
+            data=importer.preview(conn, payload.labels_dir, payload.data_yaml)
+        )
     except importer.ImporterError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except OSError as exc:

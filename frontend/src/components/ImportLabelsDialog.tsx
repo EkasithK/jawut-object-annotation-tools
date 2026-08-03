@@ -11,6 +11,7 @@ import {
 } from "../api/labelImport";
 import { createClass, type ObjectClass } from "../api/labeling";
 import { Dialog } from "./Dialog";
+import { PathField } from "./PathField";
 
 /** `null` ignores the class; `NEW` creates one named after the source class. */
 const NEW = "__new__";
@@ -30,6 +31,7 @@ export function ImportLabelsDialog({
 }) {
   const [step, setStep] = useState<Step>("choose");
   const [labelsDir, setLabelsDir] = useState("");
+  const [dataYaml, setDataYaml] = useState("");
   const [overwrite, setOverwrite] = useState(true);
   const [preview, setPreview] = useState<LabelPreview | null>(null);
   const [mapping, setMapping] = useState<Record<string, string>>({});
@@ -53,7 +55,7 @@ export function ImportLabelsDialog({
     setError(null);
     setBusy(true);
     try {
-      const found = await previewLabels(labelsDir.trim());
+      const found = await previewLabels(labelsDir.trim(), dataYaml);
       setPreview(found);
       // Pre-select by name so an identical taxonomy needs no clicks at all.
       const initial: Record<string, string> = {};
@@ -113,33 +115,35 @@ export function ImportLabelsDialog({
     <Dialog open={open} title="Import labels" onClose={close}>
       {step === "choose" && (
         <form onSubmit={(e) => void runPreview(e)}>
-          <label
-            htmlFor="labels-dir"
-            className="mb-1.5 block text-[11px] uppercase tracking-wider text-ink-muted"
-          >
-            Folder of .txt labels
-          </label>
-          <input
+          <PathField
             id="labels-dir"
+            label="Folder of .txt labels"
             value={labelsDir}
-            onChange={(e) => setLabelsDir(e.target.value)}
+            onChange={setLabelsDir}
             placeholder="C:\datasets\helmet\labels"
-            spellCheck={false}
+            hint="Labels match images by filename."
             autoFocus
-            className="w-full border border-line bg-surface-2 px-2.5 py-2 font-mono
-              text-[12px] placeholder:text-ink-faint focus:border-accent
-              focus:outline-none"
           />
-          <p className="mt-2 text-[11px] leading-relaxed text-ink-faint">
-            Labels match images by filename. A <code>data.yaml</code> beside the
-            folder or one level up is read for class names.
-          </p>
+
+          <div className="mt-3">
+            <PathField
+              id="labels-data-yaml"
+              label="Class names (optional)"
+              value={dataYaml}
+              onChange={setDataYaml}
+              kind="data_yaml"
+              placeholder="found automatically"
+              hint="Point at a data.yaml to name the incoming classes. Left empty,
+                one beside the labels folder or a level up is used — without it
+                they arrive as class_0, class_1, …"
+            />
+          </div>
 
           <button
             type="submit"
             disabled={busy || !labelsDir.trim()}
             className="mt-4 w-full bg-accent px-3 py-2 text-[13px] font-medium
-              text-surface-0 transition-colors hover:bg-accent-hover
+              text-on-accent transition-colors hover:bg-accent-hover
               disabled:bg-surface-3 disabled:text-ink-faint"
           >
             {busy ? "Reading…" : "Read folder"}
@@ -230,7 +234,7 @@ export function ImportLabelsDialog({
               disabled={busy || preview.matched_images === 0}
               onClick={() => void runImport()}
               className="flex-1 bg-accent px-3 py-2 text-[13px] font-medium
-                text-surface-0 transition-colors hover:bg-accent-hover
+                text-on-accent transition-colors hover:bg-accent-hover
                 disabled:bg-surface-3 disabled:text-ink-faint"
             >
               {busy ? "Importing…" : `Import ${preview.matched_images} images`}
@@ -257,7 +261,7 @@ export function ImportLabelsDialog({
           <button
             onClick={close}
             className="mt-4 w-full bg-accent px-3 py-2 text-[13px] font-medium
-              text-surface-0 transition-colors hover:bg-accent-hover"
+              text-on-accent transition-colors hover:bg-accent-hover"
           >
             Done
           </button>

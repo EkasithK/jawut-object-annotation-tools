@@ -279,11 +279,17 @@ def _images_by_stem(conn: sqlite3.Connection) -> dict[str, sqlite3.Row]:
     return {Path(str(row["filename"])).stem: row for row in rows}
 
 
-def preview(conn: sqlite3.Connection, labels_dir: Path) -> LabelPreview:
+def preview(
+    conn: sqlite3.Connection, labels_dir: Path, data_yaml: Path | None = None
+) -> LabelPreview:
     """Read a label folder without writing anything.
 
     Drives the class-mapping step: the user has to see which classes are coming in
     and what shape the files are in before deciding where they land.
+
+    ``data_yaml`` names the class-name source explicitly, for the common case
+    where the dataset's yaml is neither beside the labels nor one level up. Left
+    unset, :func:`find_data_yaml` looks in those two places.
     """
     if not labels_dir.is_dir():
         raise ImporterError(f"'{labels_dir}' is not a folder")
@@ -318,17 +324,19 @@ def preview(conn: sqlite3.Connection, labels_dir: Path) -> LabelPreview:
             box_counts[box.source_class] = box_counts.get(box.source_class, 0) + 1
             highest_class = max(highest_class, box.source_class)
 
-    data_yaml = find_data_yaml(labels_dir)
-    if data_yaml is not None:
+    chosen_yaml = data_yaml if data_yaml is not None else find_data_yaml(labels_dir)
+    if chosen_yaml is not None and not chosen_yaml.is_file():
+        raise ImporterError(f"'{chosen_yaml}' is not a file")
+    if chosen_yaml is not None:
         try:
-            names = read_class_names(data_yaml)
+            names = read_class_names(chosen_yaml)
             source = SourceClasses(
-                names=names, from_data_yaml=True, data_yaml_path=str(data_yaml)
+                names=names, from_data_yaml=True, data_yaml_path=str(chosen_yaml)
             )
         except ImporterError as exc:
             issues.append(
                 ImportIssue(
-                    file=data_yaml.name,
+                    file=chosen_yaml.name,
                     line=None,
                     kind=IssueKind.MALFORMED,
                     detail=str(exc),

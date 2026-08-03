@@ -55,9 +55,10 @@ export type ImportIssue = z.infer<typeof importIssueSchema>;
 export type LabelPreview = z.infer<typeof labelPreviewSchema>;
 export type LabelImportResult = z.infer<typeof labelImportResultSchema>;
 
-export const previewLabels = (labelsDir: string) =>
+export const previewLabels = (labelsDir: string, dataYaml?: string) =>
   api.post("/api/v1/labels/preview", labelPreviewSchema, {
     labels_dir: labelsDir,
+    data_yaml: dataYaml?.trim() ? dataYaml.trim() : null,
   });
 
 export const applyLabels = (

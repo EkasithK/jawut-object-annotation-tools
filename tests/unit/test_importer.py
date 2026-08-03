@@ -214,6 +214,42 @@ def test_preview_uses_data_yaml_names(
     assert result.source_classes.names == ["No_Helmet", "Safety-Helmet"]
 
 
+def test_preview_reads_an_explicitly_named_data_yaml(
+    conn: sqlite3.Connection, imported: list[str], labels_dir: Path, tmp_path: Path
+) -> None:
+    """The dataset's yaml is often nowhere near the labels folder."""
+    elsewhere = tmp_path / "somewhere_else" / "data.yaml"
+    elsewhere.parent.mkdir(parents=True)
+    elsewhere.write_text("names: ['No_Helmet', 'Safety-Helmet']\n", encoding="utf-8")
+    (labels_dir / "a.txt").write_text("1 0.5 0.5 0.2 0.2\n", encoding="utf-8")
+
+    result = importer.preview(conn, labels_dir, elsewhere)
+
+    assert result.source_classes.from_data_yaml is True
+    assert result.source_classes.names == ["No_Helmet", "Safety-Helmet"]
+    assert result.source_classes.data_yaml_path == str(elsewhere)
+
+
+def test_an_explicit_data_yaml_wins_over_the_one_beside_the_labels(
+    conn: sqlite3.Connection, imported: list[str], labels_dir: Path, tmp_path: Path
+) -> None:
+    (labels_dir / "data.yaml").write_text("names: ['wrong']\n", encoding="utf-8")
+    chosen = tmp_path / "chosen.yaml"
+    chosen.write_text("names: ['right']\n", encoding="utf-8")
+    (labels_dir / "a.txt").write_text("0 0.5 0.5 0.2 0.2\n", encoding="utf-8")
+
+    result = importer.preview(conn, labels_dir, chosen)
+
+    assert result.source_classes.names == ["right"]
+
+
+def test_preview_rejects_a_data_yaml_that_is_not_there(
+    conn: sqlite3.Connection, imported: list[str], labels_dir: Path, tmp_path: Path
+) -> None:
+    with pytest.raises(importer.ImporterError, match="is not a file"):
+        importer.preview(conn, labels_dir, tmp_path / "nothing.yaml")
+
+
 def test_preview_invents_names_without_a_data_yaml(
     conn: sqlite3.Connection, imported: list[str], labels_dir: Path
 ) -> None:
