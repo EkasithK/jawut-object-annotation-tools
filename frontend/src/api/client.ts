@@ -36,6 +36,28 @@ function launchToken(): string | null {
   return (window as { __JAWUT_TOKEN__?: string }).__JAWUT_TOKEN__ ?? null;
 }
 
+/**
+ * Load a binary endpoint and hand back an object URL for it.
+ *
+ * An `<img>` element cannot send headers, so pointing one straight at
+ * `/api/v1/images/:id/file` produces a request carrying no `X-Jawut-Token`,
+ * which the server rejects — leaving the canvas waiting on an image that never
+ * arrives. Fetching keeps the token in a header, and any image element will
+ * load the blob URL this returns.
+ *
+ * The caller owns the returned URL and must revoke it.
+ */
+export async function fetchObjectUrl(path: string): Promise<string> {
+  const token = launchToken();
+  const response = await fetch(path, {
+    headers: token ? { "X-Jawut-Token": token } : {},
+  });
+  if (!response.ok) {
+    throw new ApiError("FETCH_FAILED", `could not load ${path}`, response.status);
+  }
+  return URL.createObjectURL(await response.blob());
+}
+
 async function request<T extends z.ZodTypeAny>(
   path: string,
   schema: T,

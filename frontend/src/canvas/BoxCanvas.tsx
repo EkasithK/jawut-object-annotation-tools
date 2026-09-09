@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { fetchObjectUrl } from "../api/client";
 import type { DraftBox, ObjectClass } from "../api/labeling";
 import {
   boxAtPoint,
@@ -116,8 +117,12 @@ export function BoxCanvas({
 
   useEffect(() => {
     setReady(false);
+    // Fetched rather than assigned to `src` directly: the image endpoint needs
+    // the launch token, and an image element cannot send one.
+    let objectUrl: string | null = null;
+    let cancelled = false;
     const image = new Image();
-    image.src = imageUrl;
+
     image.onload = () => {
       imageRef.current = image;
       setReady(true);
@@ -126,9 +131,26 @@ export function BoxCanvas({
       imageRef.current = null;
       setReady(false);
     };
+
+    void fetchObjectUrl(imageUrl)
+      .then((url) => {
+        if (cancelled) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+        objectUrl = url;
+        image.src = url;
+      })
+      .catch(() => {
+        imageRef.current = null;
+        setReady(false);
+      });
+
     return () => {
+      cancelled = true;
       image.onload = null;
       image.onerror = null;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [imageUrl]);
 
