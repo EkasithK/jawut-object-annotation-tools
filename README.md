@@ -164,6 +164,21 @@ valid background image. Images never opened are excluded by default; a checkbox 
 Split exports also write `export_manifest.json` recording the seed, ratios and per-image split
 assignment, so the same export can be reproduced later.
 
+## License
+
+MIT — see [`LICENSE`](LICENSE).
+
+## Citing
+
+If Jawut helped you build or fix a dataset, please cite it:
+
+```
+Kowcharoen, E. (2026). Jawut Object Annotation Tools (Version 0.4.0) [Computer software].
+https://github.com/EkasithK/jawut-object-annotation-tools
+```
+
+A machine-readable entry is in [`CITATION.cff`](CITATION.cff).
+
 ## Building from source
 
 Requires Python 3.11+, [uv](https://github.com/astral-sh/uv), and Node 20+.
