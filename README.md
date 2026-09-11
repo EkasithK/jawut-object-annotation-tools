@@ -179,6 +179,8 @@ https://github.com/EkasithK/jawut-object-annotation-tools
 
 A machine-readable entry is in [`CITATION.cff`](CITATION.cff).
 
+Jawut is built and maintained by Ekasith Kowcharoen — [ekasithk.com](https://ekasithk.com/).
+
 ## Building from source
 
 Requires Python 3.11+, [uv](https://github.com/astral-sh/uv), and Node 20+.
